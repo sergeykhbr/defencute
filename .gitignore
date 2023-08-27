@@ -1,0 +1,11 @@
+.vs
+*.sdf
+*.opensdf
+*.suo
+*.err
+Debug
+Release
+*.log
+*.rcc
+bin
+moc_*.h
