@@ -50,7 +50,7 @@ jobs:
             - name: (4) Build
               run: .ci\build-project.ps1
               env:
-                QT_PATH: ${{github.workspace}}/${{env.Qt6_DIR}}
+                QT_PATH: ${{github.workspace}}\${{env.Qt6_DIR}}
             - name: (5) Zip build
               run:  |
                     7z a ${{runner.temp}}\${{env.ARTIFACT}} .\build\* -r
