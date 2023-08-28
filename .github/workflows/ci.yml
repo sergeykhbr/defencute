@@ -31,8 +31,6 @@ jobs:
                   pwd
                   ls -l $RUNNER_TEMP
                   echo ${{env.Qt6_DIR}}
-                  ls -l ${{env.Qt6_DIR}}
-                  ls -l ${{env.Qt6_DIR}}/lib
 
             - run: /bin/bash .ci/install-vcpkg.sh
             - run: /bin/bash .ci/build-project.sh
