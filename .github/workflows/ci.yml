@@ -28,8 +28,9 @@ jobs:
                 modules: qtscxml qt3d
 
             - name: List directories
-              run: pwd
-              run: ls -l $RUNNER_TEMP
+              run: |
+                  pwd
+                  ls -l $RUNNER_TEMP
 
             - run: /bin/bash .ci/install-vcpkg.sh
             - run: /bin/bash .ci/build-project.sh
