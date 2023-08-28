@@ -31,6 +31,9 @@ jobs:
               run: |
                   pwd
                   ls -l $RUNNER_TEMP
+                  echo ${{env.QT_PATH}}
+                  ls -l ${{env.QT_PATH}}
+                  ls -l ${{env.QT_PATH}}/lib
 
             - run: /bin/bash .ci/install-vcpkg.sh
             - run: /bin/bash .ci/build-project.sh
