@@ -1,5 +1,6 @@
 mkdir -pv $1/../qtlib
 mkdir -pv $1/../qtlib/platforms
+echo "RUNNER_TEMP=" $RUNNER_TEMP
 echo "QT_PATH=" $QT_PATH
 sudo ls -l $QT_PATH
 cp $QT_PATH/plugins/platforms/libqlinuxfb.so $1/../qtlib/platforms/

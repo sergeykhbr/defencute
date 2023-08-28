@@ -29,6 +29,5 @@ jobs:
             - run: /bin/bash .ci/install-vcpkg.sh
             - run: /bin/bash .ci/build-project.sh
               env:
-                RUNNER_TEMP: ${{env.RUNNER_TEMP}}
                 QT_PATH: ${{env.Qt6_DIR}}
 
