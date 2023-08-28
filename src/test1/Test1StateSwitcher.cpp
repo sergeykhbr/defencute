@@ -1,5 +1,3 @@
-#pragma once
-
 #include <QtCore/QRandomGenerator>
 #include <QtStateMachine/QAbstractTransition>
 #include "Test1StateSwitcher.h"

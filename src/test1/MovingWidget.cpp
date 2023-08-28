@@ -1,5 +1,3 @@
-#pragma once
-
 #include "MovingWidget.h"
 
 void MovingWidget::paint(QPainter *painter,

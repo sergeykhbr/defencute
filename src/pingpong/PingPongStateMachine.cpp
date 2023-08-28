@@ -1,5 +1,3 @@
-#pragma once
-
 #include "PingPongStateMachine.h"
 
 PingPongStateMachine::PingPongStateMachine(QObject *parent) :
