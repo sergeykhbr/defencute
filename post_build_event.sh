@@ -1,7 +1,10 @@
+#!/bin/sh
+
 mkdir -pv $1/../qtlib
 mkdir -pv $1/../qtlib/platforms
 echo "RUNNER_TEMP=" $RUNNER_TEMP
 echo "QT_PATH=" $QT_PATH
+find / -name "*Qt/6.2.4/"
 sudo ls -l $QT_PATH
 cp $QT_PATH/plugins/platforms/libqlinuxfb.so $1/../qtlib/platforms/
 cp $QT_PATH/plugins/platforms/libqminimal.so $1/../qtlib/platforms/
