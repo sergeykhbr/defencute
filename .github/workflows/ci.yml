@@ -4,7 +4,7 @@ on: [push]
 env:
   SOURCE_DIR: ${{github.workspace}}
   QT_VERSION: 6.2.*
-  QT_PATH:    ${{runner.temp}}
+  QT_PATH:    $RUNNER_TEMP
 
 jobs:
     linux-gcc:
@@ -24,7 +24,7 @@ jobs:
               with:
                 version: ${{env.QT_VERSION}}
                 host:    linux
-                dir:     ${{runner.temp}}
+                dir:     $RUNNER_TEMP
                 modules: qtstatemachine
 
             - run: /bin/bash .ci/install-vcpkg.sh
