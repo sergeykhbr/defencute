@@ -1,6 +1,5 @@
 mkdir -pv $1/../qtlib
 mkdir -pv $1/../qtlib/platforms
-echo "Qt6_DIR=" $Qt6_DIR
 echo "QT_PATH=" $QT_PATH
 sudo ls -l $QT_PATH
 cp $QT_PATH/plugins/platforms/libqlinuxfb.so $1/../qtlib/platforms/
