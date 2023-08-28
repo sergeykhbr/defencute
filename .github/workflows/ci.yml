@@ -25,7 +25,7 @@ jobs:
                 version: ${{env.QT_VERSION}}
                 host:    linux
                 dir:     $RUNNER_TEMP
-                modules: gui statemachine
+                modules: qtscxml qt3d
 
             - run: /bin/bash .ci/install-vcpkg.sh
             - run: /bin/bash .ci/build-project.sh
