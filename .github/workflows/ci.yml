@@ -21,11 +21,11 @@ jobs:
                   sudo apt-get install -y g++-12 libstdc++-12-dev
             - name: Install Qt6
               uses: jurplel/install-qt-action@v3
-                with:
-                  version: ${{env.QT_VERSION}}
-                  host:    linux
-                  dir:     ${{runner.temp}}
-                  modules: qtstatemachine
+              with:
+                version: ${{env.QT_VERSION}}
+                host:    linux
+                dir:     ${{runner.temp}}
+                modules: qtstatemachine
 
             - run: /bin/bash .ci/install-vcpkg.sh
             - run: /bin/bash .ci/build-project.sh
