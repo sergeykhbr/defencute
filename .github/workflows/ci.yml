@@ -2,6 +2,7 @@ name: CI
 on: [push]
 
 env:
+  ARTIFACT:   defencute.zip
   SOURCE_DIR: ${{github.workspace}}
   QT_VERSION: 6.2.*
 
@@ -25,9 +26,36 @@ jobs:
                 host:    linux
                 dir:     $RUNNER_TEMP
                 modules: qtscxml qt3d
-
             - run: /bin/bash .ci/install-vcpkg.sh
             - run: /bin/bash .ci/build-project.sh
               env:
                 QT_PATH: ${{github.workspace}}/${{env.Qt6_DIR}}
 
+
+    windows-msvc:
+        name: Windows MSVC
+        runs-on: windows-latest
+        steps:
+            - name: (1) Checkout
+              uses: actions/checkout@v3
+            - name: (2) Install Qt6
+              uses: jurplel/install-qt-action@v3
+              with:
+                version: ${{env.QT_VERSION}}
+                host:    windows
+                dir:     $RUNNER_TEMP
+                modules: qtscxml qt3d
+            - name: (3) Install VCPKG
+              run: .ci\install-vcpkg.ps1
+            - name: (4) Build
+              run: .ci\build-project.ps1
+              env:
+                QT_PATH: ${{github.workspace}}/${{env.Qt6_DIR}}
+            - name: (5) Zip build
+              run:  |
+                    7z a ${{runner.temp}}\${{env.ARTIFACT}} .\build\* -r
+            - name: (6) Save build artifact
+              uses: actions/upload-artifact@master
+              with:
+                name: ${{env.ARTIFACT}}
+                path: ${{runner.temp}}\${{env.ARTIFACT}}
