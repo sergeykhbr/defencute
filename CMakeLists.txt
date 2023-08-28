@@ -34,7 +34,7 @@ if(UNIX)
     set(LIBRARY_OUTPUT_PATH "bin")
     add_compile_options(-std=c++17)
 
-    target_link_libraries(pthread rt dl Qt::Core Qt::Gui Qt::Widgets Qt::StateMachine)
+    target_link_libraries(qtgame pthread rt dl Qt::Core Qt::Gui Qt::Widgets Qt::StateMachine)
     add_custom_command(TARGET qtgame
 	        POST_BUILD
 	        COMMAND /bin/bash ${CMAKE_CURRENT_SOURCE_DIR}/post_build_event.sh "${CMAKE_CURRENT_BINARY_DIR}/bin" "${CMAKE_CURRENT_SOURCE_DIR}"
