@@ -4,7 +4,6 @@ on: [push]
 env:
   SOURCE_DIR: ${{github.workspace}}
   QT_VERSION: 6.2.*
-  QT_PATH:    $Qt6_DIR
 
 jobs:
     linux-gcc:
@@ -31,9 +30,9 @@ jobs:
               run: |
                   pwd
                   ls -l $RUNNER_TEMP
-                  echo ${{env.QT_PATH}}
-                  ls -l ${{env.QT_PATH}}
-                  ls -l ${{env.QT_PATH}}/lib
+                  echo ${{env.Qt6_DIR}}
+                  ls -l ${{env.Qt6_DIR}}
+                  ls -l ${{env.Qt6_DIR}}/lib
 
             - run: /bin/bash .ci/install-vcpkg.sh
             - run: /bin/bash .ci/build-project.sh

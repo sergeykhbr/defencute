@@ -1,5 +1,6 @@
 mkdir -pv $1/../qtlib
 mkdir -pv $1/../qtlib/platforms
+set QT_PATH=$Qt6_DIR
 echo "QT_PATH=" $QT_PATH
 ls -l $QT_PATH
 ls -l $QT_PATH $QT_PATH/lib
