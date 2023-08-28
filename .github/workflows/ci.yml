@@ -62,12 +62,12 @@ jobs:
               env:
                 QT_PATH: ${{github.workspace}}\${{env.Qt6_DIR}}
 
-            - name: Zip build
+            - name: Archive artifact
               run:  |
                     7z a ${{runner.temp}}\${{env.ARTIFACT}} .\build\bin -r
 
             - name: Save build artifact
               uses: actions/upload-artifact@master
               with:
-                name: ${{env.ARTIFACT}}
-                path: ${{runner.temp}}\${{env.ARTIFACT}}
+                name: ${{env.ARTIFACT}}.7z
+                path: ${{runner.temp}}\${{env.ARTIFACT}}.7z
