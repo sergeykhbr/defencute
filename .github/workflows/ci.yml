@@ -26,12 +26,8 @@ jobs:
                 dir:     $RUNNER_TEMP
                 modules: qtscxml qt3d
 
-            - name: List directories
-              run: |
-                  pwd
-                  ls -l $RUNNER_TEMP
-                  echo ${{env.Qt6_DIR}}
-
             - run: /bin/bash .ci/install-vcpkg.sh
             - run: /bin/bash .ci/build-project.sh
+              env:
+                QT_PATH:${{env.Qt6_DIR}}
 
