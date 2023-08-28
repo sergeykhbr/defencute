@@ -4,7 +4,7 @@ on: [push]
 env:
   SOURCE_DIR: ${{github.workspace}}
   QT_VERSION: 6.2.*
-  QT_PATH:    $RUNNER_TEMP
+  QT_PATH:    $Qt6_DIR
 
 jobs:
     linux-gcc:
