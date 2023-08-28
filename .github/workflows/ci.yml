@@ -2,20 +2,31 @@ name: CI
 on: [push]
 
 env:
-  ARTIFACT: generated.zip
+  SOURCE_DIR: ${{github.workspace}}
+  QT_VERSION: 6.2.*
+  QT_PATH:    ${{runner.temp}}
 
 jobs:
     linux-gcc:
         name: Linux GCC
         runs-on: ubuntu-22.04
         env:
-            CC: gcc-14
-            CXX: g++-14
+            CC: gcc-12
+            CXX: g++-12
         steps:
             - uses: actions/checkout@v3
-            - run: |
+            - name: Install apt packages
+              run: |
                   sudo apt-get update
-                  sudo apt-get install -y g++-14 libstdc++-14-dev qt6-base qt6-base-dev
+                  sudo apt-get install -y g++-12 libstdc++-12-dev
+            - name: Install Qt6
+              uses: jurplel/install-qt-action@v3
+                with:
+                  version: ${{env.QT_VERSION}}
+                  host:    linux
+                  dir:     ${{runner.temp}}
+                  modules: qtstatemachine
+
             - run: /bin/bash .ci/install-vcpkg.sh
             - run: /bin/bash .ci/build-project.sh
 
