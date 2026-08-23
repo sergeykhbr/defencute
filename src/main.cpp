@@ -2,25 +2,14 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 #include <QtWidgets/QApplication>
-#include "test1/Test1GraphicsScene.h"
-#include "rogue/RogueWindow.h"
-#include "pingpong/PingPongStateMachine.h"
-#include "GameGraphicsView.h"
-
+#include "GameWindow.h"
 
 int main(int argc, char **argv)
 {
     QApplication app(argc, argv);
 
-    PingPongStateMachine pingpongmachine;
-
-    Window rogue;
-
-    Test1GraphicsScene scene;
-    GameGraphicsView window(&scene);
-    window.resize(300, 300);
-
-    rogue.show();
+    GameWindow window;
+    window.setWindowTitle("Simple 2D Tower Defense Step 1");
     window.show();
 
     return app.exec();

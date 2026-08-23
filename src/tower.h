@@ -1,18 +1,17 @@
 #pragma once
 
-#include <QObject>
-#include <QGraphicsPixmapItem>
+#include <QGraphicsView>
 #include <QGraphicsPolygonItem>
-#include <QGraphicsItem>
-#include <QPointF>
+#include <QVector2D>
+#include "enemy.h"
 
-class Tower : public QObject,
-              public QGraphicsPixmapItem {
-    Q_OBJECT
+class Tower : public QGraphicsPolygonItem {
  public:
-    Tower(QGraphicsItem *parent = 0);
- private:
-    QGraphicsPolygonItem * atackArea_;
-    QPointF atackDesctination_;
-};
+    Tower(qreal x, qreal y, qreal radius);
 
+    void updateTarget(Enemy* enemy);
+
+ private:
+    int attackCooldown = 0;
+    int range = 150;
+};

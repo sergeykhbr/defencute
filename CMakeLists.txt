@@ -1,68 +1,65 @@
-cmake_minimum_required(VERSION 3.4.0)
+cmake_minimum_required(VERSION 3.16)
 project(defencute DESCRIPTION "Qt based simple TowerDefence game example")
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(CMAKE_PREFIX_PATH "$ENV{QT_PATH}//")
-find_package(Qt6 REQUIRED COMPONENTS Core Gui StateMachine Widgets)
+if(UNIX)
+    # Qt6 installed as a package
+else()
+    set(CMAKE_PREFIX_PATH "$ENV{QT6_PATH}//")
+endif()
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
+
+add_executable(qtgame)
 
 set(src_top "${CMAKE_CURRENT_SOURCE_DIR}/src")
+set(qtgame_src
+    ${src_top}/tower.cpp
+    ${src_top}/tower.h
+    ${src_top}/enemy.cpp
+    ${src_top}/enemy.h
+    ${src_top}/GameWindow.cpp
+    ${src_top}/GameWindow.h
+    ${src_top}/main.cpp
+    defencute.qrc
+)
 
-# It is neccessary to include QtGui to workaroung error in moc_ file
-include_directories(
+target_sources(qtgame PRIVATE
+    ${qtgame_src}
+)
+
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${qtgame_src})
+
+target_include_directories(qtgame PRIVATE
     ${src_top}/common
     ${CMAKE_PREFIX_PATH}include
     ${CMAKE_PREFIX_PATH}include/QtGui
 )
 
+target_link_libraries(qtgame Qt::Core Qt::Gui Qt::Widgets)
 
-file(GLOB_RECURSE qtgame_src
-    LIST_DIRECTORIES false
-    ${src_top}/*.cpp
-    ${src_top}/*.h
-    ${src_top}/*.qrc
-)
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT qtgame)
 
-add_executable(
-   qtgame
-   ${qtgame_src}
-)
 
-if(UNIX)
-    set(LIBRARY_OUTPUT_PATH "bin")
-    add_compile_options(-std=c++17)
+ if(WIN32)
+    # Locate the windeployqt tool based on your Qt6 targets
+    get_target_property(_qmake_executable Qt6::qmake IMPORTED_LOCATION)
+    get_filename_component(_qt_bin_dir "${_qmake_executable}" DIRECTORY)
+    find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${_qt_bin_dir}")
 
-    target_link_libraries(qtgame pthread rt dl Qt::Core Qt::Gui Qt::Widgets Qt::StateMachine)
-    add_custom_command(TARGET qtgame
-	        POST_BUILD
-	        COMMAND /bin/bash ${CMAKE_CURRENT_SOURCE_DIR}/post_build_event.sh "${CMAKE_CURRENT_BINARY_DIR}/bin" "${CMAKE_CURRENT_SOURCE_DIR}"
-	        )
-
-else()
-
-    foreach(_source IN ITEMS ${qtgame_src})
-        get_filename_component(_source_path "${_source}" PATH)
-        # form proper filter name from the path to source file:
-        string(REPLACE "${CMAKE_SOURCE_DIR}" "" _group_path "${_source_path}")
-        string(REPLACE "/" "\\" _group_path "${_group_path}")
-        string(REPLACE "cmake\\qtgame" "" _group_path "${_group_path}")
- 
-        source_group("${_group_path}" FILES "${_source}")
-    endforeach()
-
-    set_target_properties(qtgame PROPERTIES RUNTIME_OUTPUT_DIRECTORY "bin")
-    set_target_properties(qtgame PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE "bin")
-    set_target_properties(qtgame PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG "bin")
-    set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT qtgame)
-
-    target_link_libraries(qtgame Qt::Core Qt::Gui Qt::Widgets Qt::StateMachine)
-    add_custom_command(TARGET qtgame 
-	        POST_BUILD
-	        COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/post_build_event.bat "\"$(SolutionDir)bin\""
-	        )
-
+    if(WINDEPLOYQT_EXECUTABLE)
+        # Run windeployqt after every successful build to copy missing DLLs
+        add_custom_command(TARGET qtgame POST_BUILD
+            COMMAND "${WINDEPLOYQT_EXECUTABLE}"
+                    --no-compiler-runtime
+                    --verbose 1
+                    "$<TARGET_FILE:qtgame>"
+            COMMENT "Deploying Qt DLLs to build directory using windeployqt..."
+        )
+    endif()
 endif()
-
- 
