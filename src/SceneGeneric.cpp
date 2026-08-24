@@ -1,14 +1,12 @@
-#include "GameWindow.h"
+#include "SceneGeneric.h"
 
 const qreal HEX_RADIUS = 24.0;
 const qreal HEX_HEIGHT = std::sqrt(3) * HEX_RADIUS;
 const qreal HORIZ_SPACING = 1.5 * HEX_RADIUS;
 
-GameWindow::GameWindow() {
-    scene = new QGraphicsScene(this);
-    scene->setSceneRect(0, 0, 800, 600);
-    setScene(scene);
-    setFixedSize(802, 602);
+SceneGeneric::SceneGeneric(QObject *parent) : QGraphicsScene(parent) {
+    currentHoveredHex_ = nullptr;
+    setSceneRect(0, 0, 800, 600);
 
     hexHNum_ = static_cast<int>(width() / HORIZ_SPACING) + 1;
     hexVNum_ = static_cast<int>(height() / HEX_HEIGHT) + 1;
@@ -24,6 +22,7 @@ GameWindow::GameWindow() {
     }
 
     // Draw the background grid and high-light the path tiles
+
     for (int col = 0; col < hexHNum_; ++col) {
         for (int row = 0; row < hexVNum_; ++row) {
             QPointF center = getHexCenter(col, row);
@@ -38,7 +37,7 @@ GameWindow::GameWindow() {
                 if (start.row == end.row && row == start.row && col >= std::min(start.col, end.col) && col <= std::max(start.col, end.col)) isPath = true;
             }
 
-            QBrush bgBrush = isPath ? QBrush(QColor(230, 230, 230)) : QBrush(Qt::NoBrush);
+            QBrush bgBrush = isPath ? QBrush(QColor(230, 230, 230)) : QBrush(Qt::transparent);
             QPen bgPen = isPath ? QPen(Qt::NoPen) : QPen(QColor(240, 240, 240));
 
             QPolygonF hexLoop;
@@ -46,29 +45,51 @@ GameWindow::GameWindow() {
                 qreal angle_rad = M_PI / 3 * i;
                 hexLoop << QPointF(center.x() + HEX_RADIUS * cos(angle_rad), center.y() + HEX_RADIUS * sin(angle_rad));
             }
-            QGraphicsPolygonItem* bgHex = scene->addPolygon(hexLoop, bgPen, bgBrush);
-            bgHex->setData(0, isPath); // Tag it so we know it's a road tile
+            QGraphicsPolygonItem* bgHex = addPolygon(hexLoop, bgPen, bgBrush);
+            bgHex->setData(HexPathRole, isPath);
             bgHex->setZValue(-1);
         }
     }
     // Spawn our path-following circle enemy
     enemy = new Enemy(visualPathPixelPoints);
-    scene->addItem(enemy);
-
-    // Game Loop Timer (Approx 60 FPS)
-    gameTimer = new QTimer(this);
-    connect(gameTimer, &QTimer::timeout, this, &GameWindow::gameLoop);
-    gameTimer->start(16); 
+    addItem(enemy);
 }
 
-void GameWindow::mouseMoveEvent(QMouseEvent* event) {
-    QPointF scenePos = mapToScene(event->pos());
+void SceneGeneric::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
+    QGraphicsScene::mouseMoveEvent(event);
 
-    QGraphicsView::mouseMoveEvent(event);
+    // 2. Find the exact item under the cursor
+    QGraphicsItem *item = itemAt(event->scenePos(), QTransform());
+    QGraphicsPolygonItem *hex = qgraphicsitem_cast<QGraphicsPolygonItem*>(item);
+
+    // 3. Check if it's one of your valid hex tiles
+    if (hex && !hex->data(HexPathRole).toBool()) {
+        if (hex != currentHoveredHex_) {
+            // Restore the previous hexagon's original color
+            resetCurrentHighlight();
+
+            // Save the original brush before overwriting it
+            oldBrush_ = hex->brush();
+            currentHoveredHex_ = hex;
+
+            // Highlight the new hexagon with Blue
+            currentHoveredHex_->setBrush(QBrush(Qt::blue));
+        }
+    } else {
+        // Mouse moved over empty space or a non-hex item
+        resetCurrentHighlight();
+    }
 }
 
-void GameWindow::mousePressEvent(QMouseEvent* event) {
-    QPointF scenePos = mapToScene(event->pos());
+void SceneGeneric::resetCurrentHighlight() {
+    if (currentHoveredHex_) {
+        currentHoveredHex_->setBrush(oldBrush_);
+        currentHoveredHex_ = nullptr;
+    }
+}
+
+void SceneGeneric::mousePressEvent(QGraphicsSceneMouseEvent* event) {
+    QPointF scenePos = event->scenePos();
 
     int col = std::round(scenePos.x() / HORIZ_SPACING);
     qreal targetY = scenePos.y();
@@ -82,7 +103,7 @@ void GameWindow::mousePressEvent(QMouseEvent* event) {
 
     // Prevent building towers directly on top of our new winding road
     // We do this by checking if the clicked spot hits a road hex
-    QGraphicsItem* clickedItem = scene->itemAt(snapCenter, transform());
+    QGraphicsItem *clickedItem = itemAt(event->scenePos(), QTransform());
     if (clickedItem && clickedItem->data(0).toBool() == true) {
         return; // Block building on the track!
     }
@@ -94,12 +115,12 @@ void GameWindow::mousePressEvent(QMouseEvent* event) {
     }
 
     Tower* newTower = new Tower(snapCenter.x(), snapCenter.y(), HEX_RADIUS);
-    scene->addItem(newTower);
+    addItem(newTower);
     towers.append(newTower);
 }
 
 // Helper to turn grid columns/rows into exact screen pixel centers
-QPointF GameWindow::getHexCenter(int col, int row) {
+QPointF SceneGeneric::getHexCenter(int col, int row) {
     qreal posX = col * HORIZ_SPACING + HEX_RADIUS;
     qreal posY = row * HEX_HEIGHT + (HEX_HEIGHT / 2.0);
     if (col % 2 != 0) {
@@ -108,7 +129,8 @@ QPointF GameWindow::getHexCenter(int col, int row) {
     return QPointF(posX, posY);
 }
 
-void GameWindow::gameLoop() {
+
+void SceneGeneric::gameLoop() {
     if (enemy) {
         enemy->move();
             

@@ -19,12 +19,18 @@ add_executable(qtgame)
 
 set(src_top "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(qtgame_src
-    ${src_top}/tower.cpp
     ${src_top}/tower.h
-    ${src_top}/enemy.cpp
+    ${src_top}/tower.cpp
     ${src_top}/enemy.h
-    ${src_top}/GameWindow.cpp
-    ${src_top}/GameWindow.h
+    ${src_top}/enemy.cpp
+    ${src_top}/SceneGeneric.h
+    ${src_top}/SceneGeneric.cpp
+    ${src_top}/GameView.h
+    ${src_top}/GameView.cpp
+    ${src_top}/GameController.h
+    ${src_top}/GameController.cpp
+    ${src_top}/MainWindow.h
+    ${src_top}/MainWindow.cpp
     ${src_top}/main.cpp
     defencute.qrc
 )
