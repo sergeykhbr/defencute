@@ -1,3 +1,19 @@
+/*
+ *  Copyright 2026 Sergey Khabarov, sergeykhbr@gmail.com
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
 #pragma once
 
 #include "enemy.h"
@@ -10,8 +26,9 @@ const qreal HEALTH_BAR_WIDTH = 30.0;
 const qreal HEALTH_BAR_HEIGHT = 4.0;
 const qreal HEALTH_BAR_OFFSET_Y = 10.0; // Distance above the enemy sprite boundary
 
-Enemy::Enemy(const QList<QPointF>& points) : QGraphicsPixmapItem(),
-    healthMax_(100) {
+Enemy::Enemy(const QList<QPointF>& points, QPointF startOffset) : QGraphicsPixmapItem(),
+    healthMax_(100),
+    startOffset_(startOffset) {
     pathPoints = points;
     spriteSheet_.load(":/images/base_walk_strip8.png");
 
@@ -26,8 +43,9 @@ void Enemy::resetPosition() {
     currentFrameIndex_ = 0;
     animationTimer_ = 0;
     directionRow_ = 0;
+
     if (!pathPoints.isEmpty()) {
-        setPos(pathPoints[0]);
+        setPos(pathPoints[0] + startOffset_);
     }
     updateVisualFrame();
 }
@@ -48,10 +66,43 @@ void Enemy::updateVisualFrame() {
     setPixmap(singleFrame);
 }
 
-void Enemy::move() {
-    if (currentWaypointIndex >= pathPoints.size()) return;
+QVector2D Enemy::getFuturePos(int tick) {
+    QPointF target;
+    QVector2D targetPos;
+    QVector2D direction;
+    qreal distance;
 
-    QPointF target = pathPoints[currentWaypointIndex];
+    int tmpWaypoint = currentWaypointIndex;
+    if (tmpWaypoint >= pathPoints.size()) {
+        tmpWaypoint = pathPoints.size() - 1;
+    }
+
+    QVector2D currentPos(x(), y());
+    target = pathPoints[tmpWaypoint] + startOffset_;
+    for (int i = 0; i < tick; i++) {
+        targetPos = QVector2D(target.x(), target.y());
+        direction = targetPos - currentPos;
+        distance = direction.length();
+        if (distance <= speed) {
+            currentPos = targetPos;
+            if (++tmpWaypoint >= pathPoints.size()) {
+                tmpWaypoint = pathPoints.size() - 1;
+            }
+            target = pathPoints[tmpWaypoint] + startOffset_;
+        } else {
+            direction.normalize();
+            currentPos += QVector2D(direction.x() * speed, direction.y() * speed);
+        }
+    }
+    return currentPos;
+}
+
+void Enemy::move() {
+    if (currentWaypointIndex >= pathPoints.size()) {
+        return;
+    }
+
+    QPointF target = pathPoints[currentWaypointIndex] + startOffset_;
     QVector2D currentPos(x(), y());
     QVector2D targetPos(target.x(), target.y());
         

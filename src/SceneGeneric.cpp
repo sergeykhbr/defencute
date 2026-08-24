@@ -1,3 +1,19 @@
+/*
+ *  Copyright 2026 Sergey Khabarov, sergeykhbr@gmail.com
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
 #include "SceneGeneric.h"
 
 const qreal HEX_RADIUS = 24.0;
@@ -54,8 +70,10 @@ SceneGeneric::SceneGeneric(QObject *parent) : QGraphicsScene(parent) {
         }
     }
     // Spawn our path-following circle enemy
-    enemy = new Enemy(visualPathPixelPoints);
-    addItem(enemy);
+    enemy_[0] = new Enemy(visualPathPixelPoints, QPointF(0, 15));
+    enemy_[1] = new Enemy(visualPathPixelPoints, QPointF(0, -10));
+    addItem(enemy_[0]);
+    addItem(enemy_[1]);
 }
 
 void SceneGeneric::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
@@ -116,7 +134,7 @@ void SceneGeneric::mousePressEvent(QGraphicsSceneMouseEvent* event) {
         }
     }
 
-    Tower* newTower = new Tower(snapCenter);
+    Tower* newTower = new Tower(snapCenter, this);
     addItem(newTower);
     towers.append(newTower);
 }
@@ -131,20 +149,43 @@ QPointF SceneGeneric::getHexCenter(int col, int row) {
     return QPointF(posX, posY);
 }
 
+void SceneGeneric::addBallistic(BallisticGeneric *p) {
+    listBallistic_.append(p);
+    addItem(p);
+}
 
 void SceneGeneric::gameLoop() {
-    if (enemy) {
-        enemy->move();
+    for (int i = 0; i < 2; i++) {
+        if (!enemy_[i]) {
+            continue;
+        }
+        enemy_[i]->move();
             
         // Loop or restart enemy if it gets to the final waypoint or dies
-        if (enemy->hasReachedEnd() || enemy->getHealth() <= 0) {
-            enemy->resetPosition();
+        if (enemy_[i]->hasReachedEnd() || enemy_[i]->getHealth() <= 0) {
+            enemy_[i]->resetPosition();
         }
     }
 
-    if (enemy && enemy->getHealth() > 0) {
-        for (Tower* tower : towers) {
-            tower->updateTarget(enemy);
+    for (Tower* tower : towers) {
+        tower->updateCooldown();
+    }
+
+    for (Tower* tower : towers) {
+        for (int i = 0; i < 2; i++) {
+            tower->updateTarget(enemy_[i]);
+        }
+    }
+
+    // C. Step all active flying arrows forward and clean up dead ones
+    for (int i = listBallistic_.size() - 1; i >= 0; --i) {
+        BallisticGeneric* arrow = listBallistic_[i];
+        arrow->advanceFrame();
+
+        if (arrow->isDead) {
+            removeItem(arrow);
+            listBallistic_.removeAt(i);
+            delete arrow;
         }
     }
 }
