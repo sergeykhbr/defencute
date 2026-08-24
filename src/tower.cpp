@@ -1,18 +1,16 @@
 #include "tower.h"
 
-Tower::Tower(qreal x, qreal y, qreal radius) {
-    QPolygonF hexPolygon;
-    for (int i = 0; i < 6; ++i) {
-        qreal angle_rad = M_PI / 3 * i; 
-        hexPolygon << QPointF(radius * cos(angle_rad), radius * sin(angle_rad));
-    }
-    setPolygon(hexPolygon);
-    setBrush(Qt::blue);
-    setPos(x, y);
+Tower::Tower(QPointF pos) {
+    spriteSheet_.load(":/images/twr1.png");
+    QPixmap singleFrame = spriteSheet_.copy(0, 0, 96, 64);
+    setPixmap(singleFrame);
+
+    setZValue(pos.y());
+    setPos(pos.x() - 96/2, pos.y() - 64/2);
 }
 
 void Tower::updateTarget(Enemy* enemy) {
-    if (!enemy || enemy->health <= 0) return;
+    if (!enemy || enemy->getHealth() <= 0) return;
 
     // Calculate distance to enemy
     QVector2D towerPos(x(), y());
@@ -21,11 +19,6 @@ void Tower::updateTarget(Enemy* enemy) {
 
     if (attackCooldown > 0) {
         attackCooldown--;
-        // Revert enemy color back to normal after flash
-        if (attackCooldown == 10 && enemy->health > 30) {
-            enemy->currentColor = Qt::red;
-            //enemy->setBrush(enemy->currentColor);
-        }
     }
 
     // Shoot if enemy is in range and cooldown is ready

@@ -6,19 +6,23 @@ const int FRAME_WIDTH = 96;  // Size of one frame box
 const int FRAME_HEIGHT = 64;
 const int ANIM_SPEED_TICKS = 8; // Change sprite frame every 8 game loop ticks (~60fps / 8)
 
-Enemy::Enemy(const QList<QPointF>& points) : QGraphicsPixmapItem() {
+const qreal HEALTH_BAR_WIDTH = 30.0;
+const qreal HEALTH_BAR_HEIGHT = 4.0;
+const qreal HEALTH_BAR_OFFSET_Y = 10.0; // Distance above the enemy sprite boundary
+
+Enemy::Enemy(const QList<QPointF>& points) : QGraphicsPixmapItem(),
+    healthMax_(100) {
     pathPoints = points;
     spriteSheet_.load(":/images/base_walk_strip8.png");
 
     setOffset(-FRAME_WIDTH / 2, -FRAME_HEIGHT / 2);
 
-    //setBrush(currentColor);
     resetPosition();
 }
 
 void Enemy::resetPosition() {
     currentWaypointIndex = 0;
-    health = 100;
+    health_ = healthMax_;
     currentFrameIndex_ = 0;
     animationTimer_ = 0;
     directionRow_ = 0;
@@ -63,6 +67,7 @@ void Enemy::move() {
         // Step forward along the direction vector
         direction.normalize();
         moveBy(direction.x() * speed, direction.y() * speed);
+        setZValue(y());
     }
 
     animationTimer_++;
@@ -78,12 +83,47 @@ bool Enemy::hasReachedEnd() const {
 }
 
 void Enemy::takeDamage(int damage) {
-    health -= damage;
-    // Visual indicator: flash yellow when damaged, turn dark red when low
-    if (health <= 30) {
-        currentColor = QColor(139, 0, 0); // Dark Red
-    } else {
-        currentColor = Qt::yellow; 
-    }
-    //setBrush(currentColor);
+    health_ -= damage;
 }
+
+void Enemy::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
+    QGraphicsPixmapItem::paint(painter, option, widget); 
+
+    if (health_ <= 0) {
+        return;
+    }
+
+    qreal healthRatio = static_cast<qreal>(health_) / healthMax_;
+
+    // Use your base class pixmap size configurations to place the health bar perfectly
+    qreal spriteWidth = this->pixmap().width();
+    
+    // Center the bar over the texture width bounding space
+    qreal barX = (spriteWidth - HEALTH_BAR_WIDTH) / 2.0 - (spriteWidth / 2.0); 
+    qreal barY = -(this->pixmap().height() / 2.0) - HEALTH_BAR_OFFSET_Y - HEALTH_BAR_HEIGHT;
+
+    // Background Layer (Red Container Fill)
+    painter->setPen(Qt::NoPen);
+    painter->setBrush(Qt::red);
+    painter->drawRect(QRectF(barX, barY, HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT));
+
+    // Foreground Layer (Green Value Fill)
+    painter->setBrush(Qt::green);
+    painter->drawRect(QRectF(barX, barY, HEALTH_BAR_WIDTH * healthRatio, HEALTH_BAR_HEIGHT));
+
+    // Border Outline Frame
+    painter->setPen(QPen(Qt::black, 1));
+    painter->setBrush(Qt::NoBrush);
+    painter->drawRect(QRectF(barX, barY, HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT));
+}
+
+// Ensure the item bounding space allocation covers the extra vertical height of the bar
+QRectF Enemy::boundingRect() const {
+    // 1. Get the standard base image bounding rectangle
+    QRectF baseRect = QGraphicsPixmapItem::boundingRect();
+    
+    // 2. Expand the top boundary upward to fit the health bar safely
+    // adjusting the top coordinate y by adding negative padding space
+    baseRect.setTop(baseRect.top() - HEALTH_BAR_OFFSET_Y - HEALTH_BAR_HEIGHT - 5);
+    
+    return baseRect;}

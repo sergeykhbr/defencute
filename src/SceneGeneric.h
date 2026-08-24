@@ -31,6 +31,7 @@ class SceneGeneric : public QGraphicsScene {
  private:
     enum EHexDataRole {
         HexPathRole,
+        HexCenter,
         HexUnavailbleRole,
         HexTowerRole,
         HexTowerType,

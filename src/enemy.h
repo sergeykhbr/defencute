@@ -2,8 +2,9 @@
 
 #include <QGraphicsView>
 #include <QGraphicsPixmapItem>
+#include <QStyleOptionGraphicsItem>
+#include <QPainter>
 #include <QVector2D>
-#include <QPolygonF>
 #include <QPointF>
 #include <QList>
 #include <QPixmap>
@@ -18,10 +19,11 @@ class Enemy : public QGraphicsPixmapItem {
     void move();
     bool hasReachedEnd() const;
     void takeDamage(int damage);
+    int getHealth() { return health_; }
 
  public:
-    int health = 100;
-    QColor currentColor = Qt::red;
+    virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
+    virtual QRectF boundingRect() const override;
 
  private:
     QPixmap spriteSheet_;
@@ -32,4 +34,6 @@ class Enemy : public QGraphicsPixmapItem {
     int currentFrameIndex_; // Cycles: 0, 1, 2
     int animationTimer_;    // Counts game ticks to slow down animation speed
     int directionRow_;      // 0 = Down, 1 = Left, 2 = Right, 3 = Up
+    int health_;
+    int healthMax_;
 };

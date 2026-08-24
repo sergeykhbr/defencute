@@ -47,7 +47,10 @@ SceneGeneric::SceneGeneric(QObject *parent) : QGraphicsScene(parent) {
             }
             QGraphicsPolygonItem* bgHex = addPolygon(hexLoop, bgPen, bgBrush);
             bgHex->setData(HexPathRole, isPath);
-            bgHex->setZValue(-1);
+            bgHex->setData(HexCenter, center);
+            bgHex->setData(HexUnavailbleRole, isPath);
+            bgHex->setData(HexTowerType, 0);
+            bgHex->setZValue(-10);
         }
     }
     // Spawn our path-following circle enemy
@@ -58,11 +61,11 @@ SceneGeneric::SceneGeneric(QObject *parent) : QGraphicsScene(parent) {
 void SceneGeneric::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
     QGraphicsScene::mouseMoveEvent(event);
 
-    // 2. Find the exact item under the cursor
+    // Find the exact item under the cursor
     QGraphicsItem *item = itemAt(event->scenePos(), QTransform());
     QGraphicsPolygonItem *hex = qgraphicsitem_cast<QGraphicsPolygonItem*>(item);
 
-    // 3. Check if it's one of your valid hex tiles
+    // Check if it's one of your valid hex tiles
     if (hex && !hex->data(HexPathRole).toBool()) {
         if (hex != currentHoveredHex_) {
             // Restore the previous hexagon's original color
@@ -91,22 +94,21 @@ void SceneGeneric::resetCurrentHighlight() {
 void SceneGeneric::mousePressEvent(QGraphicsSceneMouseEvent* event) {
     QPointF scenePos = event->scenePos();
 
-    int col = std::round(scenePos.x() / HORIZ_SPACING);
-    qreal targetY = scenePos.y();
-    if (col % 2 != 0) targetY -= (HEX_HEIGHT / 2.0);
-    int row = std::round((targetY - (HEX_HEIGHT / 2.0)) / HEX_HEIGHT);
+    QGraphicsItem *item = itemAt(event->scenePos(), QTransform());
+    QGraphicsPolygonItem *hex = qgraphicsitem_cast<QGraphicsPolygonItem*>(item);
 
-    QPointF snapCenter = getHexCenter(col, row);
-
-    // Simple bound prevention
-    if (col < 0 || col >= 23 || row < 0 || row >= 15) return;
-
-    // Prevent building towers directly on top of our new winding road
-    // We do this by checking if the clicked spot hits a road hex
-    QGraphicsItem *clickedItem = itemAt(event->scenePos(), QTransform());
-    if (clickedItem && clickedItem->data(0).toBool() == true) {
-        return; // Block building on the track!
+    if (!hex) {
+        return;
     }
+    if (hex->data(HexPathRole).toBool()
+        || hex->data(HexUnavailbleRole).toBool()
+        || hex->data(HexTowerType).toInt() != 0) {
+        return;
+    }
+
+
+    QPointF snapCenter = hex->data(HexCenter).toPointF();
+
 
     for (Tower* t : towers) {
         if (std::abs(t->x() - snapCenter.x()) < 5 && std::abs(t->y() - snapCenter.y()) < 5) {
@@ -114,7 +116,7 @@ void SceneGeneric::mousePressEvent(QGraphicsSceneMouseEvent* event) {
         }
     }
 
-    Tower* newTower = new Tower(snapCenter.x(), snapCenter.y(), HEX_RADIUS);
+    Tower* newTower = new Tower(snapCenter);
     addItem(newTower);
     towers.append(newTower);
 }
@@ -135,12 +137,12 @@ void SceneGeneric::gameLoop() {
         enemy->move();
             
         // Loop or restart enemy if it gets to the final waypoint or dies
-        if (enemy->hasReachedEnd() || enemy->health <= 0) {
+        if (enemy->hasReachedEnd() || enemy->getHealth() <= 0) {
             enemy->resetPosition();
         }
     }
 
-    if (enemy && enemy->health > 0) {
+    if (enemy && enemy->getHealth() > 0) {
         for (Tower* tower : towers) {
             tower->updateTarget(enemy);
         }

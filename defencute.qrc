@@ -2,5 +2,6 @@
 <qresource>
     <file>images/plot_96x96.png</file>
     <file>images/base_walk_strip8.png</file>
+    <file>images/twr1.png</file>
 </qresource>
 </RCC>
