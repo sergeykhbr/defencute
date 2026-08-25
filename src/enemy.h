@@ -37,6 +37,7 @@ class Enemy : public QGraphicsPixmapItem {
     bool hasReachedEnd() const;
     void takeDamage(int damage);
     int getHealth() { return health_; }
+    qreal getTraveledDistance() const { return traveledDistance_; }
 
  public:
     virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
@@ -48,10 +49,11 @@ class Enemy : public QGraphicsPixmapItem {
     QPointF startOffset_;
     int currentWaypointIndex = 0;
     
-    qreal speed = 2.0;
+    qreal speed_;
     int currentFrameIndex_; // Cycles: 0, 1, 2
     int animationTimer_;    // Counts game ticks to slow down animation speed
     int directionRow_;      // 0 = Down, 1 = Left, 2 = Right, 3 = Up
     int health_;
     int healthMax_;
+    qreal traveledDistance_;
 };

@@ -19,23 +19,64 @@
 #include <QGraphicsView>
 #include <QGraphicsScene>
 #include <QGraphicsPixmapItem>
+#include <QGraphicsEllipseItem>
 #include <QVector2D>
 #include <QList>
 #include "enemy.h"
+#include "projectile.h"
+#include "towermenu.h"
 
-class Tower : public QGraphicsPixmapItem {
+class TowerGeneric : public QGraphicsPixmapItem {
  public:
-    Tower(QPointF pos,  QGraphicsScene* scene);
+    TowerGeneric(QPointF pos,  QGraphicsScene* scene);
 
     virtual void updateCooldown();
+    virtual bool isReadToAtack() { return attackCooldown_ <= 0; }
     virtual void updateTarget(Enemy* enemy);
-    virtual int getProjectileFramesToTarget() { return 25; }
-    virtual int getCooldownTime() { return 75; }
-    virtual int getRange() { return 150; }
+    virtual int getFramesToTarget() { return frameSpeed_; }
+    virtual qreal getRange() { return range_; }
+    virtual int getDamage() { return damage_; }
 
- private:
+ protected:
+    // Intercept when selection status shifts dynamically
+    virtual QVariant itemChange(GraphicsItemChange change,
+                                const QVariant &value) override;
+
+    virtual void paint(QPainter *painter,
+                       const QStyleOptionGraphicsItem *option,
+                       QWidget *widget) override;
+
+    virtual Projectile *getpProjectile(QPointF &start,
+                                       QPointF &target,
+                                       Enemy* enemy) = 0;
+
+ protected:
     QGraphicsScene* scene_;
     QPointF hexCenter_;
     QPixmap spriteSheet_;
+    int cooldownTime_;
     int attackCooldown_;
+    int frameSpeed_;
+    qreal range_;
+    int damage_;
+    QGraphicsEllipseItem *rangeIndicator_;
+    TowerMenu menu_;
+};
+
+class ArrowTower : public TowerGeneric {
+ public:
+    ArrowTower(QPointF pos,  QGraphicsScene* scene);
+ protected:
+    virtual Projectile *getpProjectile(QPointF &start,
+                                       QPointF &target,
+                                       Enemy* enemy);
+};
+
+class GunTower : public TowerGeneric {
+ public:
+    GunTower(QPointF pos,  QGraphicsScene* scene);
+ protected:
+    virtual Projectile *getpProjectile(QPointF &start,
+                                       QPointF &target,
+                                       Enemy* enemy);
 };

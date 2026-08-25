@@ -23,7 +23,7 @@
 #include <QBrush>
 #include "tower.h"
 #include "enemy.h"
-#include "BallisticGeneric.h"
+#include "projectile.h"
 
 struct Waypoint {
     int col;
@@ -35,7 +35,7 @@ class SceneGeneric : public QGraphicsScene {
     SceneGeneric(QObject *parent = nullptr);
 
     virtual void gameLoop();
-    virtual void addBallistic(BallisticGeneric *p);
+    virtual void addProjectile(Projectile *p);
 
  protected:
     virtual void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
@@ -45,6 +45,7 @@ class SceneGeneric : public QGraphicsScene {
     // Helper to turn grid columns/rows into exact screen pixel centers
     void resetCurrentHighlight();
     QPointF getHexCenter(int col, int row);
+    void sortEnemies();
 
  private:
     enum EHexDataRole {
@@ -57,10 +58,10 @@ class SceneGeneric : public QGraphicsScene {
     };
     
 
-    Enemy* enemy_[2];
-    QList<Tower*> towers;
+    QList<Enemy *> enemies_;
+    QList<TowerGeneric *> towers_;
+    QList<Projectile *> projectiles_;
     QList<QPointF> visualPathPixelPoints;
-    QList<BallisticGeneric *> listBallistic_;
     int hexHNum_;       // total HEX per row
     int hexVNum_;       // total HEX per col
     QGraphicsPolygonItem *currentHoveredHex_;

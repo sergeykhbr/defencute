@@ -14,11 +14,13 @@
  *  limitations under the License.
  */
 
+#include "common.h"
 #include "SceneGeneric.h"
+#include <algorithm>
 
-const qreal HEX_RADIUS = 24.0;
 const qreal HEX_HEIGHT = std::sqrt(3) * HEX_RADIUS;
 const qreal HORIZ_SPACING = 1.5 * HEX_RADIUS;
+
 
 SceneGeneric::SceneGeneric(QObject *parent) : QGraphicsScene(parent) {
     currentHoveredHex_ = nullptr;
@@ -70,10 +72,20 @@ SceneGeneric::SceneGeneric(QObject *parent) : QGraphicsScene(parent) {
         }
     }
     // Spawn our path-following circle enemy
-    enemy_[0] = new Enemy(visualPathPixelPoints, QPointF(0, 15));
-    enemy_[1] = new Enemy(visualPathPixelPoints, QPointF(0, -10));
-    addItem(enemy_[0]);
-    addItem(enemy_[1]);
+    Enemy *enemy = new Enemy(visualPathPixelPoints, QPointF(0, 15));
+    addItem(enemy);
+    enemies_.push_back(enemy);
+
+    enemy = new Enemy(visualPathPixelPoints, QPointF(0, -10));
+    addItem(enemy);
+    enemies_.push_back(enemy);
+}
+
+void SceneGeneric::resetCurrentHighlight() {
+    if (currentHoveredHex_) {
+        currentHoveredHex_->setBrush(oldBrush_);
+        currentHoveredHex_ = nullptr;
+    }
 }
 
 void SceneGeneric::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
@@ -102,41 +114,34 @@ void SceneGeneric::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
     }
 }
 
-void SceneGeneric::resetCurrentHighlight() {
-    if (currentHoveredHex_) {
-        currentHoveredHex_->setBrush(oldBrush_);
-        currentHoveredHex_ = nullptr;
-    }
-}
-
 void SceneGeneric::mousePressEvent(QGraphicsSceneMouseEvent* event) {
-    QPointF scenePos = event->scenePos();
+    QGraphicsScene::mousePressEvent(event);
 
     QGraphicsItem *item = itemAt(event->scenePos(), QTransform());
-    QGraphicsPolygonItem *hex = qgraphicsitem_cast<QGraphicsPolygonItem*>(item);
+    if (qgraphicsitem_cast<TowerGeneric *>(item)) {
+    } else if (qgraphicsitem_cast<QGraphicsPolygonItem *>(item)) {
+        QGraphicsPolygonItem *hex = qgraphicsitem_cast<QGraphicsPolygonItem *>(item);
 
-    if (!hex) {
-        return;
-    }
-    if (hex->data(HexPathRole).toBool()
-        || hex->data(HexUnavailbleRole).toBool()
-        || hex->data(HexTowerType).toInt() != 0) {
-        return;
-    }
-
-
-    QPointF snapCenter = hex->data(HexCenter).toPointF();
-
-
-    for (Tower* t : towers) {
-        if (std::abs(t->x() - snapCenter.x()) < 5 && std::abs(t->y() - snapCenter.y()) < 5) {
-            return; // Already occupied
+        if (hex->data(HexPathRole).toBool()
+            || hex->data(HexUnavailbleRole).toBool()
+            || hex->data(HexTowerType).toInt() != 0) {
+            return;
         }
-    }
 
-    Tower* newTower = new Tower(snapCenter, this);
-    addItem(newTower);
-    towers.append(newTower);
+
+        QPointF snapCenter = hex->data(HexCenter).toPointF();
+
+
+        for (TowerGeneric *t : towers_) {
+            if (std::abs(t->x() - snapCenter.x()) < 5 && std::abs(t->y() - snapCenter.y()) < 5) {
+                return; // Already occupied
+            }
+        }
+
+        TowerGeneric *newTower = new ArrowTower(snapCenter, this);
+        addItem(newTower);
+        towers_.append(newTower);
+    }
 }
 
 // Helper to turn grid columns/rows into exact screen pixel centers
@@ -149,43 +154,68 @@ QPointF SceneGeneric::getHexCenter(int col, int row) {
     return QPointF(posX, posY);
 }
 
-void SceneGeneric::addBallistic(BallisticGeneric *p) {
-    listBallistic_.append(p);
+void SceneGeneric::addProjectile(Projectile *p) {
+    projectiles_.append(p);
     addItem(p);
 }
 
-void SceneGeneric::gameLoop() {
-    for (int i = 0; i < 2; i++) {
-        if (!enemy_[i]) {
-            continue;
-        }
-        enemy_[i]->move();
-            
-        // Loop or restart enemy if it gets to the final waypoint or dies
-        if (enemy_[i]->hasReachedEnd() || enemy_[i]->getHealth() <= 0) {
-            enemy_[i]->resetPosition();
-        }
+void SceneGeneric::sortEnemies() {
+    if (enemies_.isEmpty()) {
+        return;
     }
+    // index [0] is always the lead unit
+    std::sort(enemies_.begin(),
+              enemies_.end(),
+              [](const Enemy *a, const Enemy *b) {
+                    return a->getTraveledDistance() > b->getTraveledDistance();
+                }
+              );
+}
 
-    for (Tower* tower : towers) {
+void SceneGeneric::gameLoop() {
+    // Enemy update positions
+    for (Enemy *enemy : enemies_) {
+        enemy->move();
+    }
+    sortEnemies();
+
+    // Tower atack
+    for (TowerGeneric *tower : towers_) {
         tower->updateCooldown();
     }
-
-    for (Tower* tower : towers) {
-        for (int i = 0; i < 2; i++) {
-            tower->updateTarget(enemy_[i]);
+    for (TowerGeneric *tower : towers_) {
+        if (!tower->isReadToAtack()) {
+            continue;
+        }
+        for (Enemy *enemy : enemies_) {
+            tower->updateTarget(enemy);
         }
     }
 
-    // C. Step all active flying arrows forward and clean up dead ones
-    for (int i = listBallistic_.size() - 1; i >= 0; --i) {
-        BallisticGeneric* arrow = listBallistic_[i];
-        arrow->advanceFrame();
+    // Step all active flying arrows forward and clean up dead ones
+    for (int i = projectiles_.size() - 1; i >= 0; --i) {
+        Projectile* prj = projectiles_[i];
+        prj->advanceFrame();
 
-        if (arrow->isDead) {
-            removeItem(arrow);
-            listBallistic_.removeAt(i);
-            delete arrow;
+        if (prj->isDead()) {
+            removeItem(prj);
+            projectiles_.removeAt(i);
+            delete prj;
         }
+    }
+
+    // Cleanup dead enemy:
+    for (int i = enemies_.size() - 1; i >= 0; --i) {
+        Enemy *enemy = enemies_[i];          
+        if (enemy->hasReachedEnd() || enemy->getHealth() <= 0) {
+            enemy->resetPosition();
+        }
+#if 0
+        if (enemy->hasReachedEnd()) {
+            enemies_.removeAt(i);
+            removeItem(enemy);
+            delete enemy; // Reward player with gold here
+        }
+#endif
     }
 }

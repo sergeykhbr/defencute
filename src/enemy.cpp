@@ -27,8 +27,10 @@ const qreal HEALTH_BAR_HEIGHT = 4.0;
 const qreal HEALTH_BAR_OFFSET_Y = 10.0; // Distance above the enemy sprite boundary
 
 Enemy::Enemy(const QList<QPointF>& points, QPointF startOffset) : QGraphicsPixmapItem(),
+    speed_(2),
     healthMax_(100),
-    startOffset_(startOffset) {
+    startOffset_(startOffset),
+    traveledDistance_(0) {
     pathPoints = points;
     spriteSheet_.load(":/images/base_walk_strip8.png");
 
@@ -43,6 +45,7 @@ void Enemy::resetPosition() {
     currentFrameIndex_ = 0;
     animationTimer_ = 0;
     directionRow_ = 0;
+    traveledDistance_ = 0;
 
     if (!pathPoints.isEmpty()) {
         setPos(pathPoints[0] + startOffset_);
@@ -83,7 +86,7 @@ QVector2D Enemy::getFuturePos(int tick) {
         targetPos = QVector2D(target.x(), target.y());
         direction = targetPos - currentPos;
         distance = direction.length();
-        if (distance <= speed) {
+        if (distance <= speed_) {
             currentPos = targetPos;
             if (++tmpWaypoint >= pathPoints.size()) {
                 tmpWaypoint = pathPoints.size() - 1;
@@ -91,7 +94,8 @@ QVector2D Enemy::getFuturePos(int tick) {
             target = pathPoints[tmpWaypoint] + startOffset_;
         } else {
             direction.normalize();
-            currentPos += QVector2D(direction.x() * speed, direction.y() * speed);
+            QVector2D step(direction.x() * speed_, direction.y() * speed_);
+            currentPos += step;
         }
     }
     return currentPos;
@@ -110,14 +114,18 @@ void Enemy::move() {
     QVector2D direction = targetPos - currentPos;
     qreal distance = direction.length();
 
-    if (distance <= speed) {
+    if (distance <= speed_) {
         // Close enough! Snap to target and aim for the next waypoint
         setPos(target);
+        traveledDistance_ += distance;
         currentWaypointIndex++;
     } else {
         // Step forward along the direction vector
         direction.normalize();
-        moveBy(direction.x() * speed, direction.y() * speed);
+        QVector2D step(direction.x() * speed_, direction.y() * speed_);
+        moveBy(step.x(), step.y());
+        traveledDistance_ = step.length();
+
         setZValue(y());
     }
 
@@ -135,6 +143,9 @@ bool Enemy::hasReachedEnd() const {
 
 void Enemy::takeDamage(int damage) {
     health_ -= damage;
+    if (health_ < 0) {
+        health_ = 0;
+    }
 }
 
 void Enemy::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {

@@ -19,8 +19,13 @@ add_executable(qtgame)
 
 set(src_top "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(qtgame_src
-    ${src_top}/BallisticGeneric.h
-    ${src_top}/BallisticGeneric.cpp
+    ${src_top}/common.h
+    ${src_top}/projectile.h
+    ${src_top}/projectile.cpp
+    ${src_top}/towermenubtn.h
+    ${src_top}/towermenubtn.cpp
+    ${src_top}/towermenu.h
+    ${src_top}/towermenu.cpp
     ${src_top}/tower.h
     ${src_top}/tower.cpp
     ${src_top}/enemy.h
