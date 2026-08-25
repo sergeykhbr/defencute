@@ -32,6 +32,7 @@ class TowerGeneric : public QGraphicsPixmapItem {
 
     virtual void updateCooldown();
     virtual bool isReadToAtack() { return attackCooldown_ <= 0; }
+    virtual bool isInRange(QVector2D  enemy_pos);
     virtual void updateTarget(Enemy* enemy);
     virtual int getFramesToTarget() { return frameSpeed_; }
     virtual qreal getRange() { return range_; }

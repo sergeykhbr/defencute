@@ -16,10 +16,31 @@
 
 #pragma once
 
-#include <inttypes.h>
+#include <QGraphicsSceneMouseEvent>
+#include <QGraphicsItem>
+#include <QPainter>
+#include <QCursor>
+#include <QObject>
 
-const double HEX_X_TO_Y = 0.6;
-const double HEX_RADIUS_X = 24.0;
-const double HEX_RADIUS_Y = HEX_X_TO_Y * HEX_RADIUS_X;
+class HexMenuButton : public QGraphicsObject {
+    Q_OBJECT
+ public:
+    HexMenuButton(QString name, qreal radius, QGraphicsObject* parent = nullptr);
 
+    QRectF boundingRect() const override;
 
+    void paint(QPainter* painter,
+               const QStyleOptionGraphicsItem*,
+               QWidget*) override;
+
+ signals:
+    void signalPressed(const QString &);
+
+ protected:
+    void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
+
+ private:
+    QString name_;
+    qreal radius_;
+    bool isHovered_;
+};

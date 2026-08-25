@@ -16,10 +16,26 @@
 
 #pragma once
 
-#include <inttypes.h>
+#include <QObject>
+#include <QGraphicsObject>
+#include <QPainter>
+#include "hexmenubtn.h"
 
-const double HEX_X_TO_Y = 0.6;
-const double HEX_RADIUS_X = 24.0;
-const double HEX_RADIUS_Y = HEX_X_TO_Y * HEX_RADIUS_X;
+class HexMenu : public QGraphicsObject {
+    Q_OBJECT
+ public:
+    explicit HexMenu(QGraphicsObject* parent = nullptr);
 
+    virtual QRectF boundingRect() const ;
+    virtual void paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget*) override;
 
+ signals:
+    void signalBuildTower(const QString &);
+
+ protected slots:
+    void slotButtonClicked(const QString &towerName);
+
+ private:
+    HexMenuButton* Btn1_;
+    HexMenuButton* Btn2_;
+};

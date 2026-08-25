@@ -14,6 +14,7 @@
  *  limitations under the License.
  */
 
+#include "common.h"
 #include "tower.h"
 #include "projectile.h"
 #include "SceneGeneric.h"
@@ -49,8 +50,9 @@ QVariant TowerGeneric::itemChange(GraphicsItemChange change, const QVariant &val
         if (rangeIndicator_ == nullptr) {
             rangeIndicator_ = new QGraphicsEllipseItem(this);
             //  Center the circle around the tower's origin (0, 0 in local space)
-            qreal r = getRange();
-            rangeIndicator_->setRect(-r, -r, 2 * r, 2* r);
+            qreal rx = getRange();
+            qreal ry = HEX_X_TO_Y * rx;
+            rangeIndicator_->setRect(-rx, -ry, 2 * rx, 2 * ry);
             rangeIndicator_->setBrush(QBrush(QColor(0, 255, 70, 20)));
             rangeIndicator_->setPen(QPen(QColor(0, 255, 70, 150), 2, Qt::SolidLine));
             rangeIndicator_->setVisible(false);
@@ -70,7 +72,6 @@ void TowerGeneric::paint(QPainter *painter, const QStyleOptionGraphicsItem *opti
     // Create a copy of the paint style options
     QStyleOptionGraphicsItem customOption(*option);
     customOption.state &= ~QStyle::State_Selected;
-    QGraphicsPixmapItem::paint(painter, &customOption, widget);
 
     // Draw your custom Green Selection Circle if the tower is selected
     if (this->isSelected()) {
@@ -81,18 +82,35 @@ void TowerGeneric::paint(QPainter *painter, const QStyleOptionGraphicsItem *opti
         painter->setBrush(Qt::NoBrush);
         
         // Draw an ellipse right at the base of your tower (around the 0,0 center)
-        qreal r = 28.0;
-        painter->drawEllipse(QRectF(-r,
-                                    -r / 2.0 + 10,
-                                    2 * r,
-                                    2 * r / 2.0));
+        qreal rx = HEX_RADIUS_X + 4;
+        qreal ry = HEX_RADIUS_Y + 2;
+        painter->drawEllipse(QRectF(-rx,
+                                    -ry / 2.0 + (HEX_RADIUS_Y/2 - 2),
+                                    2 * rx,
+                                    2 * ry / 2.0));
     }
+    QGraphicsPixmapItem::paint(painter, &customOption, widget);
 }
 
 void TowerGeneric::updateCooldown() {
     if (attackCooldown_ > 0) {
         --attackCooldown_;
     }
+}
+
+bool TowerGeneric::isInRange(QVector2D enemy_pos) {
+    QVector2D diffPos(hexCenter_);
+    qreal rx = getRange();
+    qreal ry = HEX_X_TO_Y * rx;
+    diffPos -= enemy_pos;
+
+
+    qreal distance = diffPos.x() * diffPos.x() / (rx * rx)
+                   + diffPos.y() * diffPos.y() / (ry * ry);
+    if (distance <= 1.0) {
+        return true;
+    }
+    return false;
 }
 
 void TowerGeneric::updateTarget(Enemy* enemy) {
@@ -107,10 +125,9 @@ void TowerGeneric::updateTarget(Enemy* enemy) {
     // Calculate distance to enemy
     QVector2D towerPos(hexCenter_);
     QVector2D enemyPos = enemy->getFuturePos(getFramesToTarget());
-    qreal distance = towerPos.distanceToPoint(enemyPos);
 
     // Shoot if enemy is in range and cooldown is ready
-    if (distance > getRange()) {
+    if (!isInRange(enemyPos)) {
         return;
     }
 

@@ -30,6 +30,12 @@ set(qtgame_src
     ${src_top}/tower.cpp
     ${src_top}/enemy.h
     ${src_top}/enemy.cpp
+    ${src_top}/hexmenubtn.h
+    ${src_top}/hexmenubtn.cpp
+    ${src_top}/hexmenu.h
+    ${src_top}/hexmenu.cpp
+    ${src_top}/hextile.h
+    ${src_top}/hextile.cpp
     ${src_top}/SceneGeneric.h
     ${src_top}/SceneGeneric.cpp
     ${src_top}/GameView.h

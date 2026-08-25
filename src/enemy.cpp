@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "common.h"
 #include "enemy.h"
 
 const int FRAME_WIDTH = 96;  // Size of one frame box
@@ -94,7 +95,8 @@ QVector2D Enemy::getFuturePos(int tick) {
             target = pathPoints[tmpWaypoint] + startOffset_;
         } else {
             direction.normalize();
-            QVector2D step(direction.x() * speed_, direction.y() * speed_);
+            QVector2D step(direction.x() * speed_,
+                           direction.y() * speed_ * HEX_X_TO_Y);
             currentPos += step;
         }
     }
@@ -122,7 +124,8 @@ void Enemy::move() {
     } else {
         // Step forward along the direction vector
         direction.normalize();
-        QVector2D step(direction.x() * speed_, direction.y() * speed_);
+        QVector2D step(direction.x() * speed_,
+                       direction.y() * speed_ * HEX_X_TO_Y);
         moveBy(step.x(), step.y());
         traveledDistance_ = step.length();
 

@@ -24,6 +24,8 @@
 #include "tower.h"
 #include "enemy.h"
 #include "projectile.h"
+#include "hexmenu.h"
+#include "hextile.h"
 
 struct Waypoint {
     int col;
@@ -31,6 +33,7 @@ struct Waypoint {
 };
 
 class SceneGeneric : public QGraphicsScene {
+    Q_OBJECT
  public:
     SceneGeneric(QObject *parent = nullptr);
 
@@ -41,29 +44,25 @@ class SceneGeneric : public QGraphicsScene {
     virtual void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
     virtual void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
 
+ private slots:
+    void slotBuildTower(const QString &towerName);
+
  private:
     // Helper to turn grid columns/rows into exact screen pixel centers
     void resetCurrentHighlight();
     QPointF getHexCenter(int col, int row);
     void sortEnemies();
+    void closeActiveMenu();
 
  private:
-    enum EHexDataRole {
-        HexPathRole,
-        HexCenter,
-        HexUnavailbleRole,
-        HexTowerRole,
-        HexTowerType,
-        HexTowerLevel
-    };
-    
-
     QList<Enemy *> enemies_;
     QList<TowerGeneric *> towers_;
     QList<Projectile *> projectiles_;
     QList<QPointF> visualPathPixelPoints;
+    HexMenu *hexmenu_;
     int hexHNum_;       // total HEX per row
     int hexVNum_;       // total HEX per col
     QGraphicsPolygonItem *currentHoveredHex_;
     QBrush oldBrush_;
+    HexTile *hextileSelected_;
 };

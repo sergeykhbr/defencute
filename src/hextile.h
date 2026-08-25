@@ -16,10 +16,24 @@
 
 #pragma once
 
-#include <inttypes.h>
+#include <QGraphicsPolygonItem>
+#include <QPointF>
+#include "hexmenu.h"
 
-const double HEX_X_TO_Y = 0.6;
-const double HEX_RADIUS_X = 24.0;
-const double HEX_RADIUS_Y = HEX_X_TO_Y * HEX_RADIUS_X;
+class HexTile : public QGraphicsPolygonItem {
+ public:
+    HexTile(QPointF center, bool isPath);
 
+    QPointF getCenter() { return center_; }
+    bool isBuildAvailable() {
+        return !isPath_ && !isBlocked_ && tower_ == nullptr;
+    }
+    void attachTower(QGraphicsPixmapItem *tower) { tower_ = tower; }
+    void dettachTower() { tower_ = 0; }
 
+ private:
+    QGraphicsPixmapItem *tower_;
+    QPointF center_;
+    bool isPath_;
+    bool isBlocked_;
+};

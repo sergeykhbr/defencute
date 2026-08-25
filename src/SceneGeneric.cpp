@@ -18,11 +18,14 @@
 #include "SceneGeneric.h"
 #include <algorithm>
 
-const qreal HEX_HEIGHT = std::sqrt(3) * HEX_RADIUS;
-const qreal HORIZ_SPACING = 1.5 * HEX_RADIUS;
+const qreal HEX_HEIGHT = std::sqrt(3) * HEX_RADIUS_Y;
+const qreal HORIZ_SPACING = 1.5 * HEX_RADIUS_X;
 
 
-SceneGeneric::SceneGeneric(QObject *parent) : QGraphicsScene(parent) {
+SceneGeneric::SceneGeneric(QObject *parent)
+    : QGraphicsScene(parent),
+    hextileSelected_(nullptr)
+{
     currentHoveredHex_ = nullptr;
     setSceneRect(0, 0, 800, 600);
 
@@ -54,23 +57,15 @@ SceneGeneric::SceneGeneric(QObject *parent) : QGraphicsScene(parent) {
                 if (start.col == end.col && col == start.col && row >= std::min(start.row, end.row) && row <= std::max(start.row, end.row)) isPath = true;
                 if (start.row == end.row && row == start.row && col >= std::min(start.col, end.col) && col <= std::max(start.col, end.col)) isPath = true;
             }
-
-            QBrush bgBrush = isPath ? QBrush(QColor(230, 230, 230)) : QBrush(Qt::transparent);
-            QPen bgPen = isPath ? QPen(Qt::NoPen) : QPen(QColor(240, 240, 240));
-
-            QPolygonF hexLoop;
-            for (int i = 0; i < 6; ++i) {
-                qreal angle_rad = M_PI / 3 * i;
-                hexLoop << QPointF(center.x() + HEX_RADIUS * cos(angle_rad), center.y() + HEX_RADIUS * sin(angle_rad));
-            }
-            QGraphicsPolygonItem* bgHex = addPolygon(hexLoop, bgPen, bgBrush);
-            bgHex->setData(HexPathRole, isPath);
-            bgHex->setData(HexCenter, center);
-            bgHex->setData(HexUnavailbleRole, isPath);
-            bgHex->setData(HexTowerType, 0);
-            bgHex->setZValue(-10);
+            addItem(new HexTile(center, isPath));
         }
     }
+    hexmenu_ = new HexMenu();
+    connect(hexmenu_, &HexMenu::signalBuildTower,
+            this, &SceneGeneric::slotBuildTower);
+
+    addItem(hexmenu_);
+
     // Spawn our path-following circle enemy
     Enemy *enemy = new Enemy(visualPathPixelPoints, QPointF(0, 15));
     addItem(enemy);
@@ -93,10 +88,10 @@ void SceneGeneric::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
 
     // Find the exact item under the cursor
     QGraphicsItem *item = itemAt(event->scenePos(), QTransform());
-    QGraphicsPolygonItem *hex = qgraphicsitem_cast<QGraphicsPolygonItem*>(item);
+    HexTile *hex = qgraphicsitem_cast<HexTile *>(item);
 
     // Check if it's one of your valid hex tiles
-    if (hex && !hex->data(HexPathRole).toBool()) {
+    if (hex && hex->isBuildAvailable()) {
         if (hex != currentHoveredHex_) {
             // Restore the previous hexagon's original color
             resetCurrentHighlight();
@@ -118,35 +113,41 @@ void SceneGeneric::mousePressEvent(QGraphicsSceneMouseEvent* event) {
     QGraphicsScene::mousePressEvent(event);
 
     QGraphicsItem *item = itemAt(event->scenePos(), QTransform());
+
+    closeActiveMenu();
+
     if (qgraphicsitem_cast<TowerGeneric *>(item)) {
-    } else if (qgraphicsitem_cast<QGraphicsPolygonItem *>(item)) {
-        QGraphicsPolygonItem *hex = qgraphicsitem_cast<QGraphicsPolygonItem *>(item);
-
-        if (hex->data(HexPathRole).toBool()
-            || hex->data(HexUnavailbleRole).toBool()
-            || hex->data(HexTowerType).toInt() != 0) {
-            return;
+    } else if (qgraphicsitem_cast<HexTile *>(item)) {
+        hextileSelected_ = qgraphicsitem_cast<HexTile *>(item);
+        if (hextileSelected_->isBuildAvailable()) {
+            hexmenu_->setPos(event->scenePos());
+            hexmenu_->setVisible(true);
         }
+    }
+}
 
+void SceneGeneric::closeActiveMenu() {
+    hexmenu_->setVisible(false);
+}
 
-        QPointF snapCenter = hex->data(HexCenter).toPointF();
+void SceneGeneric::slotBuildTower(const QString &towerName) {
+    TowerGeneric *newTower = nullptr;
+    if (towerName == "ArrowTower") {
+        newTower = new ArrowTower(hextileSelected_->getCenter(), this);
+    } else if (towerName == "GunTower") {
+        newTower = new GunTower(hextileSelected_->getCenter(), this);
+    }
 
-
-        for (TowerGeneric *t : towers_) {
-            if (std::abs(t->x() - snapCenter.x()) < 5 && std::abs(t->y() - snapCenter.y()) < 5) {
-                return; // Already occupied
-            }
-        }
-
-        TowerGeneric *newTower = new ArrowTower(snapCenter, this);
+    if (newTower) {
         addItem(newTower);
         towers_.append(newTower);
+        hextileSelected_->attachTower(newTower);
     }
 }
 
 // Helper to turn grid columns/rows into exact screen pixel centers
 QPointF SceneGeneric::getHexCenter(int col, int row) {
-    qreal posX = col * HORIZ_SPACING + HEX_RADIUS;
+    qreal posX = col * HORIZ_SPACING + HEX_RADIUS_X;
     qreal posY = row * HEX_HEIGHT + (HEX_HEIGHT / 2.0);
     if (col % 2 != 0) {
         posY += HEX_HEIGHT / 2.0;
