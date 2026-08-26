@@ -27,16 +27,23 @@
 #include "hexmenu.h"
 #include "hextile.h"
 #include "InfoPanel.h"
+#include <IScene.h>
 
 struct Waypoint {
     int col;
     int row;
 };
 
-class SceneGeneric : public QGraphicsScene {
+class SceneGeneric : public QGraphicsScene,
+                     public IScene {
     Q_OBJECT
  public:
     SceneGeneric(QObject *parent = nullptr);
+
+    // IScene
+    virtual bool isGoldAvailable(int gold) override {
+        return goldCnt_ >= gold;
+    }
 
     virtual void gameLoop();
     virtual void addProjectile(Projectile *p);
@@ -45,8 +52,12 @@ class SceneGeneric : public QGraphicsScene {
     virtual void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
     virtual void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
 
+ signals:
+    void signalUpdateGold(int gold);
+    void signalUpdateLives(int lives);
+    void signalUpdateWave(int wave);
+
  public slots:
-    void slotGoldChanged(int newGold);
     void slotBuildTower(const QString &towerName);
 
  private:
@@ -68,5 +79,7 @@ class SceneGeneric : public QGraphicsScene {
     QBrush oldBrush_;
     HexTile *hextileSelected_;
     InfoPanel *infoPanel_;
-    int goldAvailable_;
+    int goldCnt_;
+    int livesCnt_;
+    int wavesCnt_;
 };

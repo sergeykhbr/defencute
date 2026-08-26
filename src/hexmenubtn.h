@@ -21,11 +21,13 @@
 #include <QPainter>
 #include <QCursor>
 #include <QObject>
+#include <IScene.h>
 
 class HexMenuButton : public QGraphicsObject {
     Q_OBJECT
  public:
-    HexMenuButton(int iconIdx,
+    HexMenuButton(IScene *iscene,
+                  int iconIdx,
                   QString name,
                   qreal radius,
                   QGraphicsObject* parent = nullptr);
@@ -44,6 +46,7 @@ class HexMenuButton : public QGraphicsObject {
     void hoverEnterEvent(QGraphicsSceneHoverEvent* event) override;
     void hoverLeaveEvent(QGraphicsSceneHoverEvent* event) override;
  private:
+    IScene *iscene_;
     QString name_;
     qreal radius_;
     bool isHovered_;

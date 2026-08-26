@@ -20,11 +20,12 @@
 #include <QGraphicsObject>
 #include <QPixmap>
 #include <QPainter>
+#include <IScene.h>
 
 class InfoPanel : public QGraphicsObject {
     Q_OBJECT
  public:
-    explicit InfoPanel(QGraphicsObject *parent = nullptr);
+    explicit InfoPanel(IScene *iscene, QGraphicsObject *parent = nullptr);
 
     QRectF boundingRect() const override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
@@ -35,6 +36,7 @@ class InfoPanel : public QGraphicsObject {
     void slotUpdateWave(int wave);
 
  private:
+    IScene *iscene_;
     QPixmap backgroundBg_;
     int gold_;
     int lives_;
@@ -42,5 +44,5 @@ class InfoPanel : public QGraphicsObject {
     
     // Panel Dimensions
     const qreal width_ = 240.0;
-    const qreal height_ = 50.0;
+    const qreal height_ = 38.0;
 };

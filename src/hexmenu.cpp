@@ -20,19 +20,21 @@ static const qreal ORBIT_DISTANCE = 54.0;
 static const qreal BTN_RADIUS = 24.0;
 
 
-HexMenu::HexMenu(QGraphicsObject *parent)
-    : QGraphicsObject(parent) {
+HexMenu::HexMenu(IScene *iscene, QGraphicsObject *parent)
+    : QGraphicsObject(parent),
+    iscene_(iscene)
+{
     // Orbit button positioning distance out from the tower center point
 
     // Position Upgrade button to the Left, Sell button to the Right
-    Btn1_ = new HexMenuButton(1, "GunTower", BTN_RADIUS, this);
+    Btn1_ = new HexMenuButton(iscene, 1, "GunTower", BTN_RADIUS, this);
     Btn1_->setPos(ORBIT_DISTANCE * sin(0), 
                     ORBIT_DISTANCE * cos(0));
     connect(Btn1_, &HexMenuButton::signalPressed,
             this, &HexMenu::slotButtonClicked);
 
 
-    Btn2_ = new HexMenuButton(0, "ArrowTower", BTN_RADIUS, this);
+    Btn2_ = new HexMenuButton(iscene, 0, "ArrowTower", BTN_RADIUS, this);
     Btn2_->setPos(ORBIT_DISTANCE * sin(M_PI/3), 
                   ORBIT_DISTANCE * cos(M_PI/3));
     connect(Btn2_, &HexMenuButton::signalPressed,

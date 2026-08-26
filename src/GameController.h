@@ -1,3 +1,19 @@
+/*
+ *  Copyright 2026 Sergey Khabarov, sergeykhbr@gmail.com
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
 #pragma once
 
 #include <QObject>
@@ -16,15 +32,10 @@ class GameController : public QObject {
     void togglePause(bool paused);
 
  signals:
-    void signalGoldChanged(int newGold);
-    void signalLivesChanged(int newLives);
-    void signalWaveChanged(int newLives);
     void signalGameOver();
 
  private slots:
     void tick();
-    void slotEnemyKilled(int gold);
-    void slotTowerSpent(int gold);
 
  private:
     // Helper to turn grid columns/rows into exact screen pixel centers
@@ -34,7 +45,4 @@ class GameController : public QObject {
     QGraphicsView *gameView_;
     SceneGeneric *gameScene_;
     QTimer tmr_;
-    int goldCnt_;
-    int livesCnt_;
-    int waveCnt_;
 };

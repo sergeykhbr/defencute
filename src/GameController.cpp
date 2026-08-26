@@ -1,12 +1,25 @@
+/*
+ *  Copyright 2026 Sergey Khabarov, sergeykhbr@gmail.com
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
 #include "GameController.h"
 
 GameController::GameController(QGraphicsView *view, QObject *parent)
     : QObject(parent),
     gameView_(view),
-    gameScene_(nullptr),
-    goldCnt_(100),
-    livesCnt_(20),
-    waveCnt_(20)
+    gameScene_(nullptr)
 {
     // Setup the physics/game loop timer (60 FPS)
     connect(&tmr_, &QTimer::timeout, this, &GameController::tick);
@@ -14,8 +27,6 @@ GameController::GameController(QGraphicsView *view, QObject *parent)
 
 void GameController::startNewGame() {
     tmr_.stop();
-    goldCnt_ = 100;
-    livesCnt_ = 20;
 
     // Wipe out old scene and clean up memory instantly
     if (gameScene_) {
@@ -27,13 +38,6 @@ void GameController::startNewGame() {
     gameScene_ = new SceneGeneric(this);
     gameView_->setScene(gameScene_);
 
-    connect(this, &GameController::signalGoldChanged,
-            gameScene_, &SceneGeneric::slotGoldChanged);
-
-    emit signalGoldChanged(goldCnt_);
-    emit signalLivesChanged(livesCnt_);
-    emit signalWaveChanged(waveCnt_);
-        
     tmr_.start(16); // ~60 ticks per second
 }
 
@@ -64,14 +68,4 @@ void GameController::tick() {
             emit gameOver();
         }
     }*/
-}
-
-void GameController::slotEnemyKilled(int gold) {
-    goldCnt_ += gold;
-    emit signalGoldChanged(goldCnt_);
-}
-
-void GameController::slotTowerSpent(int gold) {
-    goldCnt_ -= gold;
-    emit signalGoldChanged(goldCnt_);
 }

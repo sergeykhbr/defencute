@@ -16,8 +16,12 @@
 
 #include "InfoPanel.h"
 
-InfoPanel::InfoPanel(QGraphicsObject* parent)
-    : QGraphicsObject(parent), gold_(0), lives_(0), wave_(1) 
+InfoPanel::InfoPanel(IScene *iscene, QGraphicsObject* parent)
+    : QGraphicsObject(parent),
+    iscene_(iscene),
+    gold_(0),
+    lives_(0),
+    wave_(1) 
 {
     // 1. Ensure the UI element stays frozen in place relative to the viewport window camera
     setFlag(QGraphicsItem::ItemIgnoresTransformations, false); 
@@ -48,20 +52,19 @@ void InfoPanel::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidge
     // Format: Gold on the left, Lives in the middle, Wave on the right
     QString goldText  = QString("%1").arg(gold_);
     QString livesText = QString("%1").arg(lives_);
-    QString waveText  = QString("Wave: %1").arg(wave_);
+    QString waveText  = QString("%1").arg(wave_);
 
     // Draw strings with pixel spacing padding alignments
-    painter->drawText(QRectF(15, 0, 70, height_), Qt::AlignCenter, goldText);
+    painter->drawText(QRectF(39, 10, 70, height_), Qt::AlignLeft, goldText);
     
     painter->setPen(QColor(255, 100, 100)); // Shift color to red for health stats
-    painter->drawText(QRectF(90, 0, 60, height_), Qt::AlignCenter, livesText);
+    painter->drawText(QRectF(120, 10, 60, height_), Qt::AlignLeft, livesText);
     
     painter->setPen(QColor(255, 255, 255)); // White color code text for wave status
-    painter->drawText(QRectF(150, 0, 75, height_), Qt::AlignCenter, waveText);
+    painter->drawText(QRectF(186, 10, 75, height_), Qt::AlignLeft, waveText);
 }
 
-void InfoPanel::slotUpdateGold(int gold) 
-{
+void InfoPanel::slotUpdateGold(int gold) {
     gold_ = gold;
     update();
 }

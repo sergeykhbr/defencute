@@ -16,28 +16,14 @@
 
 #pragma once
 
-#include <QObject>
-#include <QGraphicsObject>
-#include <QPainter>
-#include <IScene.h>
-#include "hexmenubtn.h"
+#include <inttypes.h>
+#include "IFace.h"
 
-class HexMenu : public QGraphicsObject {
-    Q_OBJECT
+class IScene : public Interface {
  public:
-    explicit HexMenu(IScene *iscene, QGraphicsObject* parent = nullptr);
+    IScene() : Interface("IScene") {}
 
-    virtual QRectF boundingRect() const ;
-    virtual void paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget*) override;
-
- signals:
-    void signalBuildTower(const QString &);
-
- protected slots:
-    void slotButtonClicked(const QString &towerName);
-
- private:
-    IScene *iscene_;
-    HexMenuButton* Btn1_;
-    HexMenuButton* Btn2_;
+    virtual bool isGoldAvailable(int gold) = 0;
 };
+
+

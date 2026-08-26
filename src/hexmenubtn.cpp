@@ -16,11 +16,16 @@
 
 #include "hexmenubtn.h"
 
-HexMenuButton::HexMenuButton(int iconIdx,
+HexMenuButton::HexMenuButton(IScene *iscene,
+                             int iconIdx,
                              QString name,
                              qreal radius,
                              QGraphicsObject* parent)
-    : QGraphicsObject(parent), name_(name), radius_(radius), isHovered_(false) 
+    : QGraphicsObject(parent),
+    iscene_(iscene),
+    name_(name),
+    radius_(radius),
+    isHovered_(false) 
 {
     QPixmap spriteSheet;
     spriteSheet.load(":/images/build_icons_64x8.png");
@@ -42,13 +47,17 @@ void HexMenuButton::paint(QPainter* painter,
                           QWidget *) {
     painter->setRenderHint(QPainter::SmoothPixmapTransform);
 
-    // 3. Draw the sprite centered over the local origin (0, 0)
+    // Draw the sprite centered over the local origin (0, 0)
     qreal topLeftX = -radius_;
     qreal topLeftY = -radius_;
     painter->drawPixmap(topLeftX, topLeftY, coverImage_);
 
-    // 4. OPTIONAL: Add a visual feedback overlay if hovered (like a subtle dark or light tint)
-    if (isHovered_) {
+    // Add a visual feedback overlay if hovered (like a subtle dark or light tint)
+    if (!iscene_->isGoldAvailable(50)) {
+        painter->setBrush(QColor(255, 255, 255, 140));
+        painter->setPen(Qt::NoPen);
+        painter->drawEllipse(boundingRect());
+    } else if (isHovered_) {
         painter->setBrush(QColor(255, 255, 255, 40)); // Translucent white tint overlay
         painter->setPen(Qt::NoPen);
         painter->drawEllipse(boundingRect());
@@ -56,7 +65,6 @@ void HexMenuButton::paint(QPainter* painter,
 }
 
 void HexMenuButton::mousePressEvent(QGraphicsSceneMouseEvent* event) {
-    // Emit custom commands to parent structure
     emit signalPressed(name_);
     event->accept(); // Block event from dropping to map behind
 }
