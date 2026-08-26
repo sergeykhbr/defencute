@@ -26,6 +26,7 @@
 #include "projectile.h"
 #include "hexmenu.h"
 #include "hextile.h"
+#include "InfoPanel.h"
 
 struct Waypoint {
     int col;
@@ -44,7 +45,8 @@ class SceneGeneric : public QGraphicsScene {
     virtual void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
     virtual void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
 
- private slots:
+ public slots:
+    void slotGoldChanged(int newGold);
     void slotBuildTower(const QString &towerName);
 
  private:
@@ -65,4 +67,6 @@ class SceneGeneric : public QGraphicsScene {
     QGraphicsPolygonItem *currentHoveredHex_;
     QBrush oldBrush_;
     HexTile *hextileSelected_;
+    InfoPanel *infoPanel_;
+    int goldAvailable_;
 };

@@ -16,12 +16,15 @@ class GameController : public QObject {
     void togglePause(bool paused);
 
  signals:
-    void goldChanged(int newGold);
-    void livesChanged(int newLives);
-    void gameOver();
+    void signalGoldChanged(int newGold);
+    void signalLivesChanged(int newLives);
+    void signalWaveChanged(int newLives);
+    void signalGameOver();
 
  private slots:
     void tick();
+    void slotEnemyKilled(int gold);
+    void slotTowerSpent(int gold);
 
  private:
     // Helper to turn grid columns/rows into exact screen pixel centers
@@ -33,4 +36,5 @@ class GameController : public QObject {
     QTimer tmr_;
     int goldCnt_;
     int livesCnt_;
+    int waveCnt_;
 };

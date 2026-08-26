@@ -24,7 +24,8 @@ const qreal HORIZ_SPACING = 1.5 * HEX_RADIUS_X;
 
 SceneGeneric::SceneGeneric(QObject *parent)
     : QGraphicsScene(parent),
-    hextileSelected_(nullptr)
+    hextileSelected_(nullptr),
+    goldAvailable_(0)
 {
     currentHoveredHex_ = nullptr;
     setSceneRect(0, 0, 800, 600);
@@ -65,6 +66,11 @@ SceneGeneric::SceneGeneric(QObject *parent)
             this, &SceneGeneric::slotBuildTower);
 
     addItem(hexmenu_);
+
+    // Information panel: health, wave number:
+    infoPanel_ = new InfoPanel();
+    infoPanel_->setPos(15, 15);
+    addItem(infoPanel_);
 
     // Spawn our path-following circle enemy
     Enemy *enemy = new Enemy(visualPathPixelPoints, QPointF(0, 15));
@@ -128,6 +134,10 @@ void SceneGeneric::mousePressEvent(QGraphicsSceneMouseEvent* event) {
 
 void SceneGeneric::closeActiveMenu() {
     hexmenu_->setVisible(false);
+}
+
+void SceneGeneric::slotGoldChanged(int newGold) {
+    goldAvailable_ = newGold;
 }
 
 void SceneGeneric::slotBuildTower(const QString &towerName) {

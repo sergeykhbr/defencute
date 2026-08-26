@@ -28,7 +28,10 @@
 
 class TowerGeneric : public QGraphicsPixmapItem {
  public:
-    TowerGeneric(QPointF pos,  QGraphicsScene* scene);
+    TowerGeneric(QString name,
+                 QPointF pos,
+                 QGraphicsScene* scene,
+                 QString sprite);
 
     virtual void updateCooldown();
     virtual bool isReadToAtack() { return attackCooldown_ <= 0; }
@@ -52,6 +55,7 @@ class TowerGeneric : public QGraphicsPixmapItem {
                                        Enemy* enemy) = 0;
 
  protected:
+    QString towername_;
     QGraphicsScene* scene_;
     QPointF hexCenter_;
     QPixmap spriteSheet_;

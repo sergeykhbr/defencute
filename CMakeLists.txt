@@ -36,6 +36,8 @@ set(qtgame_src
     ${src_top}/hexmenu.cpp
     ${src_top}/hextile.h
     ${src_top}/hextile.cpp
+    ${src_top}/InfoPanel.h
+    ${src_top}/InfoPanel.cpp
     ${src_top}/SceneGeneric.h
     ${src_top}/SceneGeneric.cpp
     ${src_top}/GameView.h

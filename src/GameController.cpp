@@ -5,7 +5,8 @@ GameController::GameController(QGraphicsView *view, QObject *parent)
     gameView_(view),
     gameScene_(nullptr),
     goldCnt_(100),
-    livesCnt_(20) 
+    livesCnt_(20),
+    waveCnt_(20)
 {
     // Setup the physics/game loop timer (60 FPS)
     connect(&tmr_, &QTimer::timeout, this, &GameController::tick);
@@ -15,8 +16,6 @@ void GameController::startNewGame() {
     tmr_.stop();
     goldCnt_ = 100;
     livesCnt_ = 20;
-    emit goldChanged(goldCnt_);
-    emit livesChanged(livesCnt_);
 
     // Wipe out old scene and clean up memory instantly
     if (gameScene_) {
@@ -27,6 +26,13 @@ void GameController::startNewGame() {
     // Initialize a completely fresh level map
     gameScene_ = new SceneGeneric(this);
     gameView_->setScene(gameScene_);
+
+    connect(this, &GameController::signalGoldChanged,
+            gameScene_, &SceneGeneric::slotGoldChanged);
+
+    emit signalGoldChanged(goldCnt_);
+    emit signalLivesChanged(livesCnt_);
+    emit signalWaveChanged(waveCnt_);
         
     tmr_.start(16); // ~60 ticks per second
 }
@@ -58,4 +64,14 @@ void GameController::tick() {
             emit gameOver();
         }
     }*/
+}
+
+void GameController::slotEnemyKilled(int gold) {
+    goldCnt_ += gold;
+    emit signalGoldChanged(goldCnt_);
+}
+
+void GameController::slotTowerSpent(int gold) {
+    goldCnt_ -= gold;
+    emit signalGoldChanged(goldCnt_);
 }

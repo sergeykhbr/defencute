@@ -25,7 +25,10 @@
 class HexMenuButton : public QGraphicsObject {
     Q_OBJECT
  public:
-    HexMenuButton(QString name, qreal radius, QGraphicsObject* parent = nullptr);
+    HexMenuButton(int iconIdx,
+                  QString name,
+                  qreal radius,
+                  QGraphicsObject* parent = nullptr);
 
     QRectF boundingRect() const override;
 
@@ -38,9 +41,11 @@ class HexMenuButton : public QGraphicsObject {
 
  protected:
     void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
-
+    void hoverEnterEvent(QGraphicsSceneHoverEvent* event) override;
+    void hoverLeaveEvent(QGraphicsSceneHoverEvent* event) override;
  private:
     QString name_;
     qreal radius_;
     bool isHovered_;
+    QPixmap coverImage_;
 };

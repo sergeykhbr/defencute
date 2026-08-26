@@ -16,23 +16,25 @@
 
 #include "hexmenu.h"
 
+static const qreal ORBIT_DISTANCE = 54.0; 
+static const qreal BTN_RADIUS = 24.0;
+
+
 HexMenu::HexMenu(QGraphicsObject *parent)
     : QGraphicsObject(parent) {
     // Orbit button positioning distance out from the tower center point
-    qreal orbitDistance = 30.0; 
-    qreal buttonRadius = 14.0;
 
     // Position Upgrade button to the Left, Sell button to the Right
-    Btn1_ = new HexMenuButton("GunTower", buttonRadius, this);
-    Btn1_->setPos(orbitDistance * sin(0), 
-                    orbitDistance * cos(0));
+    Btn1_ = new HexMenuButton(1, "GunTower", BTN_RADIUS, this);
+    Btn1_->setPos(ORBIT_DISTANCE * sin(0), 
+                    ORBIT_DISTANCE * cos(0));
     connect(Btn1_, &HexMenuButton::signalPressed,
             this, &HexMenu::slotButtonClicked);
 
 
-    Btn2_ = new HexMenuButton("ArrowTower", buttonRadius, this);
-    Btn2_->setPos(orbitDistance * sin(M_PI/3), 
-                    orbitDistance * cos(M_PI/3));
+    Btn2_ = new HexMenuButton(0, "ArrowTower", BTN_RADIUS, this);
+    Btn2_->setPos(ORBIT_DISTANCE * sin(M_PI/3), 
+                  ORBIT_DISTANCE * cos(M_PI/3));
     connect(Btn2_, &HexMenuButton::signalPressed,
             this, &HexMenu::slotButtonClicked);
 
@@ -51,7 +53,10 @@ void HexMenu::paint(QPainter* painter,
     painter->setRenderHint(QPainter::Antialiasing);
     painter->setPen(QPen(QColor(255, 255, 255, 60), 1, Qt::DashLine));
     painter->setBrush(QColor(0, 0, 0, 20)); // Soft dark circle backdrop
-    painter->drawEllipse(QRectF(-45, -45, 90, 90));
+    painter->drawEllipse(QRectF(-ORBIT_DISTANCE,
+                                -ORBIT_DISTANCE,
+                                2*ORBIT_DISTANCE,
+                                2*ORBIT_DISTANCE));
 }
 
 void HexMenu::slotButtonClicked(const QString &towerName) {

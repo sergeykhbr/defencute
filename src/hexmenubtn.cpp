@@ -16,11 +16,20 @@
 
 #include "hexmenubtn.h"
 
-HexMenuButton::HexMenuButton(QString name,
+HexMenuButton::HexMenuButton(int iconIdx,
+                             QString name,
                              qreal radius,
                              QGraphicsObject* parent)
     : QGraphicsObject(parent), name_(name), radius_(radius), isHovered_(false) 
 {
+    QPixmap spriteSheet;
+    spriteSheet.load(":/images/build_icons_64x8.png");
+    int targetDiameter = static_cast<int>(radius_ * 2.0);
+    QPixmap coverOriginal = spriteSheet.copy(iconIdx * 64, 0, 64, 64);
+    coverImage_ = coverOriginal.scaled(targetDiameter, targetDiameter, 
+                                          Qt::KeepAspectRatio, 
+                                          Qt::SmoothTransformation);
+
     setAcceptHoverEvents(true);
 }
 
@@ -31,25 +40,18 @@ QRectF HexMenuButton::boundingRect() const {
 void HexMenuButton::paint(QPainter* painter,
                           const QStyleOptionGraphicsItem *,
                           QWidget *) {
-    // Change color dynamically on mouse hover
-    QColor circleColor = isHovered_ ? QColor(40, 180, 40) : QColor(30, 140, 30); // Green for Upgrade
-    //if (type_ == Sell) {
-    //    circleColor = isHovered_ ? QColor(220, 60, 60) : QColor(180, 40, 40);   // Red for Sell
-    //}
+    painter->setRenderHint(QPainter::SmoothPixmapTransform);
 
-    painter->setRenderHint(QPainter::Antialiasing);
-    painter->setPen(QPen(Qt::white, 2));
-    painter->setBrush(circleColor);
-    painter->drawEllipse(boundingRect());
+    // 3. Draw the sprite centered over the local origin (0, 0)
+    qreal topLeftX = -radius_;
+    qreal topLeftY = -radius_;
+    painter->drawPixmap(topLeftX, topLeftY, coverImage_);
 
-    // Draw simple inner action icons (Up Arrow or Dollar Sign)
-    painter->setPen(QPen(Qt::white, 2, Qt::SolidLine, Qt::RoundCap));
-    if (name_ == "ArrowTower") {
-        painter->setFont(QFont("Arial", 10, QFont::Bold));
-        painter->drawText(boundingRect(), Qt::AlignCenter, "1");
-    } else {
-        painter->setFont(QFont("Arial", 10, QFont::Bold));
-        painter->drawText(boundingRect(), Qt::AlignCenter, "2");
+    // 4. OPTIONAL: Add a visual feedback overlay if hovered (like a subtle dark or light tint)
+    if (isHovered_) {
+        painter->setBrush(QColor(255, 255, 255, 40)); // Translucent white tint overlay
+        painter->setPen(Qt::NoPen);
+        painter->drawEllipse(boundingRect());
     }
 }
 
@@ -57,4 +59,14 @@ void HexMenuButton::mousePressEvent(QGraphicsSceneMouseEvent* event) {
     // Emit custom commands to parent structure
     emit signalPressed(name_);
     event->accept(); // Block event from dropping to map behind
+}
+
+void HexMenuButton::hoverEnterEvent(QGraphicsSceneHoverEvent*) {
+    isHovered_ = true;
+    update();
+}
+
+void HexMenuButton::hoverLeaveEvent(QGraphicsSceneHoverEvent*) {
+    isHovered_ = false;
+    update();
 }

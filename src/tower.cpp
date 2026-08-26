@@ -19,8 +19,12 @@
 #include "projectile.h"
 #include "SceneGeneric.h"
 
-TowerGeneric::TowerGeneric(QPointF pos,  QGraphicsScene *scene) :
+TowerGeneric::TowerGeneric(QString name,
+                           QPointF pos,
+                           QGraphicsScene *scene,
+                           QString sprite) :
     QGraphicsPixmapItem(),
+    towername_(name),
     scene_(scene),
     hexCenter_(pos),
     menu_(this)
@@ -30,8 +34,8 @@ TowerGeneric::TowerGeneric(QPointF pos,  QGraphicsScene *scene) :
     attackCooldown_ = 0;
     rangeIndicator_ = 0;
 
-    spriteSheet_.load(":/images/twr1.png");
-    QPixmap singleFrame = spriteSheet_.copy(0, 0, 96, 64);
+    spriteSheet_.load(sprite);
+    QPixmap singleFrame = spriteSheet_.copy(0, 0, 64, 64);
     setPixmap(singleFrame);
 
     // THE CORRECTION: Shift the texture offset backward
@@ -142,7 +146,7 @@ void TowerGeneric::updateTarget(Enemy* enemy) {
 //////////////////
 // Arrow tower
 ArrowTower::ArrowTower(QPointF pos,  QGraphicsScene* scene) 
-    : TowerGeneric(pos, scene)
+    : TowerGeneric("ArrowTower", pos, scene, ":/images/archer_tower.png")
 {
     frameSpeed_ = 25;
     cooldownTime_ = 60;
@@ -164,7 +168,7 @@ Projectile *ArrowTower::getpProjectile(QPointF &start,
 ////////////////
 // Gun tower
 GunTower::GunTower(QPointF pos,  QGraphicsScene* scene)
-    : TowerGeneric(pos, scene)
+    : TowerGeneric("ArrowTower", pos, scene, ":/images/rifle_tower.png")
 {
     frameSpeed_ = 7;
     cooldownTime_ = 75;

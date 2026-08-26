@@ -3,5 +3,9 @@
     <file>images/plot_96x96.png</file>
     <file>images/base_walk_strip8.png</file>
     <file>images/twr1.png</file>
+    <file>images/build_icons_64x8.png</file>
+    <file>images/archer_tower.png</file>
+    <file>images/rifle_tower.png</file>
+    <file>images/info_panel_bkg.png</file>
 </qresource>
 </RCC>

@@ -28,26 +28,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), m_isPaused(false)
     m_stackedLayout = new QStackedLayout(centralWidget);
     setCentralWidget(centralWidget);
 
-    // ==========================================
-    // SCREEN 0: THE LIVE GAMEPLAY CANVAS
-    // ==========================================
-    QWidget *gameplayScreen = new QWidget(this);
-    QVBoxLayout *gameplayLayout = new QVBoxLayout(gameplayScreen);
 
-    // Simple top dashboard bar showing resource metrics
-    QHBoxLayout *topBarLayout = new QHBoxLayout();
-    QLabel *goldLabel = new QLabel("Gold: 100", this);
-    QLabel *livesLabel = new QLabel("Lives: 20", this);
-    QLabel *hintLabel = new QLabel("[ Press ESC to Menu ]", this);
-    topBarLayout->addWidget(goldLabel);
-    topBarLayout->addWidget(livesLabel);
-    topBarLayout->addStretch();
-    topBarLayout->addWidget(hintLabel);
-    gameplayLayout->addLayout(topBarLayout);
-
-    // Main viewport window canvas layout integration
     GameView *view = new GameView();
-    gameplayLayout->addWidget(view);
 
     // ==========================================
     // SCREEN 1: THE ESC MENU INTERFACE Overlay
@@ -74,21 +56,13 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), m_isPaused(false)
     menuLayout->addWidget(exitBtn);
 
     // Add both pages directly into the screen stack registry
-    m_stackedLayout->addWidget(gameplayScreen); // Index 0
+    m_stackedLayout->addWidget(view); // Index 0
     m_stackedLayout->addWidget(escMenuScreen);   // Index 1
 
     // ==========================================
     // CONTROLLER CONFIGURATION & SIGNALS
     // ==========================================
     m_controller = new GameController(view, this);
-
-    // Sync metrics counters seamlessly
-    connect(m_controller, &GameController::goldChanged, this, [goldLabel](int g){
-        goldLabel->setText(QString("Gold: %1").arg(g));
-    });
-    connect(m_controller, &GameController::livesChanged, this, [livesLabel](int l){
-        livesLabel->setText(QString("Lives: %1").arg(l));
-    });
 
     // Wire up Menu Buttons actions
     connect(resumeBtn, &QPushButton::clicked, this, [this]() {
@@ -104,6 +78,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), m_isPaused(false)
     });
 
     connect(exitBtn, &QPushButton::clicked, this, &QWidget::close);
+
 
     // Fire off initialization setup
     m_controller->startNewGame();
