@@ -23,7 +23,7 @@
 TowerGeneric::TowerGeneric(QObject *parent,
                  QString objname,
                  QJsonObject &cfg) :
-    QGraphicsPixmapItem(),
+    QGraphicsObject(),//QGraphicsPixmapItem(),
     ICoreObject(objname),
     menu_(this)
 {
@@ -44,16 +44,6 @@ TowerGeneric::TowerGeneric(QObject *parent,
 
     spriteSheet_.load(cfg["sprite"].toString());
     singleFrame_ = spriteSheet_.copy(0, 0, 64, 64);
-//    setPixmap(singleFrame);
-
-    // THE CORRECTION: Shift the texture offset backward
-    // This moves the image top-left corner so that (0,0) sits at the visual center-bottom
-//    int spriteShiftY = 24 - 2;
-//    qreal offsetX = -(singleFrame.width() / 2.0);
-//    qreal offsetY = -singleFrame.height() + spriteShiftY; // Aligns the bottom of the tower sprite to the hex center
-    // center position of radius indicator should be shifter realtive picture:
-//    setOffset(offsetX, offsetY);
-    // Position of Tower pixmap
     setPos(posx, posy);
 }
 
@@ -77,10 +67,10 @@ QVariant TowerGeneric::itemChange(GraphicsItemChange change, const QVariant &val
         menu_.setVisible(selected);
         update();
     }
-    return QGraphicsPixmapItem::itemChange(change, value);
+    return QGraphicsObject::itemChange(change, value);
 }
 
-/*QRectF TowerGeneric::boundingRect() const {
+QRectF TowerGeneric::boundingRect() const {
     qreal w = singleFrame_.width();
     qreal h = singleFrame_.height();
     
@@ -90,10 +80,10 @@ QVariant TowerGeneric::itemChange(GraphicsItemChange change, const QVariant &val
     
     // Pad the bottom slightly (+30.0) so your custom green selection ring isn't clipped
     return QRectF(topLeftX, topLeftY, w, h + 30.0);
-}*/
+}
 
 void TowerGeneric::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
-    QGraphicsPixmapItem::paint(painter, option, widget);
+    //QGraphicsPixmapItem::paint(painter, option, widget);
 
     // Create a copy of the paint style options
     QStyleOptionGraphicsItem customOption(*option);

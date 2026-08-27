@@ -20,9 +20,9 @@
 HexMenuButton::HexMenuButton(QGraphicsObject* parent,
                              QJsonObject &cfg)
     : QGraphicsObject(parent),
+    twrcfg_(cfg),
     isHovered_(false) 
 {
-    twrclsname_ = cfg["ClassName"].toString();
     radius_ = cfg["radius"].toDouble();
     price_ = cfg["price"].toInt();
     QString iconFile = cfg["iconFile"].toString();
@@ -72,7 +72,7 @@ void HexMenuButton::paint(QPainter* painter,
 
 void HexMenuButton::mousePressEvent(QGraphicsSceneMouseEvent* event) {
     if (iscene_->isGoldAvailable(price_)) {
-        emit signalPressed(twrclsname_);
+        emit signalPressed(twrcfg_);
     }
     event->accept(); // Block event from dropping to map behind
 }

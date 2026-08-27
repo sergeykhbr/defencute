@@ -19,6 +19,7 @@
 #include <QObject>
 #include <QGraphicsObject>
 #include <QPainter>
+#include <QJsonObject>
 #include <IScene.h>
 #include "hexmenubtn.h"
 
@@ -31,7 +32,7 @@ class HexMenu : public QGraphicsObject {
     virtual void paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget*) override;
 
  protected slots:
-    void slotButtonClicked(QString &clsname);
+    void slotButtonClicked(QJsonObject &twrcfg);
 
  private:
     static const int BTN_MAX = 2;

@@ -24,7 +24,7 @@ class IScene : public Interface {
     IScene() : Interface("IScene") {}
 
     virtual bool isGoldAvailable(int gold) = 0;
-    virtual void buildTower(QString &clsname) = 0;
+    virtual void buildTower(QJsonObject &twrcfg) = 0;
     virtual void addProjectile(Projectile *p) = 0;
 };
 

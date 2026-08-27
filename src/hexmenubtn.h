@@ -38,14 +38,14 @@ class HexMenuButton : public QGraphicsObject {
                QWidget*) override;
 
  signals:
-    void signalPressed(QString &clsname);
+    void signalPressed(QJsonObject &twrcfg);
 
  protected:
     void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
     void hoverEnterEvent(QGraphicsSceneHoverEvent* event) override;
     void hoverLeaveEvent(QGraphicsSceneHoverEvent* event) override;
  private:
-    QString twrclsname_;
+    QJsonObject twrcfg_;
     qreal radius_;
     int price_;
     bool isHovered_;

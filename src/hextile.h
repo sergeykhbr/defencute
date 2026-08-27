@@ -16,14 +16,24 @@
 
 #pragma once
 
-#include <QGraphicsPolygonItem>
+#include <QObject>
+#include <QGraphicsObject>
 #include <QPointF>
+#include <QPolygonF>
+#include <QBrush>
+#include <QPen>
 #include "hexmenu.h"
 #include <ITower.h>
 
-class HexTile : public QGraphicsPolygonItem {
+class HexTile : public QGraphicsObject {
+    Q_OBJECT
  public:
     HexTile(QPointF center, bool isPath);
+
+    // Mandatory QGraphicsObject overrides replacing internal polygon logic
+    QRectF boundingRect() const override;
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
+    QPainterPath shape() const override; // Ensures perfect pixel-accurate hexagon mouse clicks
 
     QPointF getCenter() { return center_; }
     bool isBuildAvailable() {
@@ -32,9 +42,16 @@ class HexTile : public QGraphicsPolygonItem {
     void attachTower(ITower *tower) { itower_ = tower; }
     void dettachTower() { itower_ = nullptr; }
 
+    void selectOn() { isSelected_ = true; update(); }
+    void selectOff() { isSelected_ = false; update(); }
+
  private:
     ITower *itower_;
     QPointF center_;
+    QPolygonF polygon_;
+    QBrush brush_;
+    QPen pen_;
+    bool isSelected_;
     bool isPath_;
     bool isBlocked_;
 };

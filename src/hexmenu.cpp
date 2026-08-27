@@ -36,10 +36,12 @@ HexMenu::HexMenu(QJsonObject &cfg) : QGraphicsObject()
     btnCfg["radius"] = BTN_RADIUS;
     btnCfg["price"] = 50;
     btnCfg["iconFile"] = ":/images/build_icons_64x8.png";
+    btnCfg["sprite"] = ":/images/archer_tower.png";
     btnCfg["iconx"] = 0;
     jsonBtn.append(btnCfg);
 
     btnCfg["ClassName"] = "RifleTower";
+    btnCfg["sprite"] = ":/images/rifle_tower.png";
     btnCfg["iconx"] = 64;
     jsonBtn.append(btnCfg);
 
@@ -73,6 +75,6 @@ void HexMenu::paint(QPainter* painter,
                                 2*ORBIT_DISTANCE));
 }
 
-void HexMenu::slotButtonClicked(QString &clsname) {
-    iscene_->buildTower(clsname);
+void HexMenu::slotButtonClicked(QJsonObject &twrcfg) {
+    iscene_->buildTower(twrcfg);
 }

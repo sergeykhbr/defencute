@@ -100,7 +100,7 @@ SceneGeneric::SceneGeneric(QObject *parent,
 
 void SceneGeneric::resetCurrentHighlight() {
     if (currentHoveredHex_) {
-        currentHoveredHex_->setBrush(oldBrush_);
+        qobject_cast<HexTile *>(currentHoveredHex_)->selectOff();
         currentHoveredHex_ = nullptr;
     }
 }
@@ -110,20 +110,24 @@ void SceneGeneric::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
 
     // Find the exact item under the cursor
     QGraphicsItem *item = itemAt(event->scenePos(), QTransform());
-    HexTile *hex = qgraphicsitem_cast<HexTile *>(item);
+    if (!item) {
+        resetCurrentHighlight();
+        return;
+    }
+    QGraphicsObject *graphicObj = item->toGraphicsObject();
+    if (!graphicObj) {
+        resetCurrentHighlight();
+        return;
+    }
+    HexTile *hex = qobject_cast<HexTile *>(graphicObj);
 
     // Check if it's one of your valid hex tiles
     if (hex && hex->isBuildAvailable()) {
         if (hex != currentHoveredHex_) {
             // Restore the previous hexagon's original color
             resetCurrentHighlight();
-
-            // Save the original brush before overwriting it
-            oldBrush_ = hex->brush();
+            hex->selectOn();
             currentHoveredHex_ = hex;
-
-            // Highlight the new hexagon with Blue
-            currentHoveredHex_->setBrush(QBrush(Qt::blue));
         }
     } else {
         // Mouse moved over empty space or a non-hex item
@@ -135,16 +139,19 @@ void SceneGeneric::mousePressEvent(QGraphicsSceneMouseEvent* event) {
     QGraphicsScene::mousePressEvent(event);
 
     QGraphicsItem *item = itemAt(event->scenePos(), QTransform());
+    QGraphicsObject *graphicObj = item->toGraphicsObject();
 
     closeActiveMenu();
 
-    if (qgraphicsitem_cast<TowerGeneric *>(item)) {
-        bool st = true;
-    } else if (qgraphicsitem_cast<HexTile *>(item)) {
-        hextileSelected_ = qgraphicsitem_cast<HexTile *>(item);
-        if (hextileSelected_->isBuildAvailable()) {
-            hexmenu_->setPos(event->scenePos());
-            hexmenu_->setVisible(true);
+    if (graphicObj) {
+        if (qobject_cast<TowerGeneric *>(graphicObj)) {
+            bool st = true;
+        } else if (qobject_cast<HexTile *>(graphicObj)) {
+            hextileSelected_ = qobject_cast<HexTile *>(graphicObj);
+            if (hextileSelected_->isBuildAvailable()) {
+                hexmenu_->setPos(event->scenePos());
+                hexmenu_->setVisible(true);
+            }
         }
     }
 }
@@ -153,15 +160,12 @@ void SceneGeneric::closeActiveMenu() {
     hexmenu_->setVisible(false);
 }
 
-void SceneGeneric::buildTower(QString &clsname) {
+void SceneGeneric::buildTower(QJsonObject &twrcfg) {
     ICore *core = getpCoreInterface();
-    QJsonObject cfg;
-    cfg["scene"] = getObjName();
-    cfg["posx"] = hextileSelected_->getCenter().x();
-    cfg["posy"] = hextileSelected_->getCenter().y();
-    TowerGeneric *newTower =
-        dynamic_cast<TowerGeneric *>(core->createQtClassObject(this, clsname, cfg));
-
+    twrcfg["posx"] = hextileSelected_->getCenter().x();
+    twrcfg["posy"] = hextileSelected_->getCenter().y();
+    TowerGeneric *newTower = dynamic_cast<TowerGeneric *>(
+        core->createQtClassObject(this, twrcfg["ClassName"].toString(), twrcfg));
 
     if (newTower) {
         addItem(newTower);

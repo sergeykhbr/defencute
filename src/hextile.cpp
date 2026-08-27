@@ -18,26 +18,49 @@
 #include "hextile.h"
 
 HexTile::HexTile(QPointF center, bool isPath)
-    : QGraphicsPolygonItem(),
+    : QGraphicsObject(),
     itower_(nullptr)
 {
-    QBrush bgBrush = isPath ? QBrush(QColor(230, 230, 230))
+    brush_ = isPath ? QBrush(QColor(230, 230, 230))
                             : QBrush(Qt::transparent);
-    QPen bgPen = isPath ? QPen(Qt::NoPen)
+    pen_ = isPath ? QPen(Qt::NoPen)
                         : QPen(QColor(240, 240, 240));
-    QPolygonF hexLoop;
-
     for (int i = 0; i < 6; ++i) {
         qreal angle_rad = M_PI / 3 * i;
-        hexLoop << QPointF(center.x() + HEX_RADIUS_X * cos(angle_rad),
+        polygon_ << QPointF(center.x() + HEX_RADIUS_X * cos(angle_rad),
                            center.y() + HEX_RADIUS_Y * sin(angle_rad));
     }
-    setPolygon(hexLoop);
-    setPen(bgPen);
-    setBrush(bgBrush);
     setZValue(-10);
 
     isPath_ = isPath;
     center_ = center;
     isBlocked_ = false;
+    isSelected_ = false;
 }
+
+QRectF HexTile::boundingRect() const {
+    return polygon_.boundingRect();
+}
+
+void HexTile::paint(QPainter *painter,
+                    const QStyleOptionGraphicsItem *option,
+                    QWidget *widget) {
+    Q_UNUSED(option);
+    Q_UNUSED(widget);
+
+    painter->setPen(pen_);
+    if (isSelected_ ) {
+        painter->setBrush(QBrush(Qt::blue));
+    } else {
+        painter->setBrush(brush_);
+    }
+    painter->drawPolygon(polygon_);}
+
+// Overriding shape prevents mouse hover/clicks 
+// outside the literal bounds of the hexagon points
+QPainterPath HexTile::shape() const {
+    QPainterPath path;
+    path.addPolygon(polygon_);
+    return path;
+}
+

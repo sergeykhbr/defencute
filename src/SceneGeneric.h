@@ -50,7 +50,7 @@ class SceneGeneric : public QGraphicsScene,
     virtual bool isGoldAvailable(int gold) override {
         return goldCnt_ >= gold;
     }
-    void buildTower(QString &clsname) override;
+    void buildTower(QJsonObject &twrcfg) override;
     virtual void addProjectile(Projectile *p) override;
 
 
@@ -80,7 +80,7 @@ class SceneGeneric : public QGraphicsScene,
     HexMenu *hexmenu_;
     int hexHNum_;       // total HEX per row
     int hexVNum_;       // total HEX per col
-    QGraphicsPolygonItem *currentHoveredHex_;
+    QGraphicsObject *currentHoveredHex_;
     QBrush oldBrush_;
     HexTile *hextileSelected_;
     InfoPanel *infoPanel_;
