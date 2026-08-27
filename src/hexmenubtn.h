@@ -21,16 +21,15 @@
 #include <QPainter>
 #include <QCursor>
 #include <QObject>
+#include <QJsonObject>
 #include <IScene.h>
+#include <ITower.h>
 
 class HexMenuButton : public QGraphicsObject {
     Q_OBJECT
  public:
-    HexMenuButton(IScene *iscene,
-                  int iconIdx,
-                  QString name,
-                  qreal radius,
-                  QGraphicsObject* parent = nullptr);
+    HexMenuButton(QGraphicsObject* parent,
+                  QJsonObject &cfg);
 
     QRectF boundingRect() const override;
 
@@ -39,16 +38,17 @@ class HexMenuButton : public QGraphicsObject {
                QWidget*) override;
 
  signals:
-    void signalPressed(const QString &);
+    void signalPressed(QString &clsname);
 
  protected:
     void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
     void hoverEnterEvent(QGraphicsSceneHoverEvent* event) override;
     void hoverLeaveEvent(QGraphicsSceneHoverEvent* event) override;
  private:
-    IScene *iscene_;
-    QString name_;
+    QString twrclsname_;
     qreal radius_;
+    int price_;
     bool isHovered_;
     QPixmap coverImage_;
+    IScene *iscene_;
 };

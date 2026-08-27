@@ -16,23 +16,31 @@
 
 #pragma once
 
+#include <QObject>
 #include <QGraphicsView>
 #include <QGraphicsScene>
 #include <QGraphicsPixmapItem>
 #include <QGraphicsEllipseItem>
 #include <QVector2D>
 #include <QList>
+#include <QJsonObject>
+#include <ICoreObject.h>
+#include <IScene.h>
+#include <ITower.h>
 #include "enemy.h"
 #include "projectile.h"
 #include "towermenu.h"
 
-class TowerGeneric : public QGraphicsPixmapItem {
+class TowerGeneric : public QGraphicsObject,
+                     public ICoreObject,
+                     public ITower {
+    Q_OBJECT
  public:
-    TowerGeneric(QString name,
-                 QPointF pos,
-                 QGraphicsScene* scene,
-                 QString sprite);
+    TowerGeneric(QObject *parent,
+                 QString objname,
+                 QJsonObject &cfg);
 
+    // ITower interface
     virtual void updateCooldown();
     virtual bool isReadToAtack() { return attackCooldown_ <= 0; }
     virtual bool isInRange(QVector2D  enemy_pos);
@@ -50,15 +58,20 @@ class TowerGeneric : public QGraphicsPixmapItem {
                        const QStyleOptionGraphicsItem *option,
                        QWidget *widget) override;
 
+    virtual QRectF boundingRect() const override;
+
     virtual Projectile *getpProjectile(QPointF &start,
                                        QPointF &target,
                                        Enemy* enemy) = 0;
 
  protected:
-    QString towername_;
-    QGraphicsScene* scene_;
+    //QGraphicsScene* scene_;
+    IScene *iscene_;
     QPointF hexCenter_;
     QPixmap spriteSheet_;
+    QPixmap singleFrame_;
+
+    //QPixmap icon_;          // menu icon
     int cooldownTime_;
     int attackCooldown_;
     int frameSpeed_;
@@ -69,17 +82,23 @@ class TowerGeneric : public QGraphicsPixmapItem {
 };
 
 class ArrowTower : public TowerGeneric {
+    Q_OBJECT
  public:
-    ArrowTower(QPointF pos,  QGraphicsScene* scene);
+    Q_INVOKABLE ArrowTower(QObject *parent,
+                            QString objname,
+                            QJsonObject &cfg);
  protected:
     virtual Projectile *getpProjectile(QPointF &start,
                                        QPointF &target,
                                        Enemy* enemy);
 };
 
-class GunTower : public TowerGeneric {
+class RifleTower : public TowerGeneric {
+    Q_OBJECT
  public:
-    GunTower(QPointF pos,  QGraphicsScene* scene);
+    Q_INVOKABLE RifleTower(QObject *parent,
+                           QString objname,
+                           QJsonObject &cfg);
  protected:
     virtual Projectile *getpProjectile(QPointF &start,
                                        QPointF &target,

@@ -14,7 +14,8 @@
  *  limitations under the License.
  */
 
-#include "common.h"
+#include <common.h>
+#include <ICore.h>
 #include "SceneGeneric.h"
 #include <algorithm>
 
@@ -22,13 +23,18 @@ const qreal HEX_HEIGHT = std::sqrt(3) * HEX_RADIUS_Y;
 const qreal HORIZ_SPACING = 1.5 * HEX_RADIUS_X;
 
 
-SceneGeneric::SceneGeneric(QObject *parent)
+SceneGeneric::SceneGeneric(QObject *parent,
+                            QString objname,
+                            QJsonObject &config)
     : QGraphicsScene(parent),
+    ICoreObject(objname),
     hextileSelected_(nullptr),
     goldCnt_(100),
     livesCnt_(20),
     wavesCnt_(20)
 {
+    registerInterface(static_cast<IScene *>(this));
+
     currentHoveredHex_ = nullptr;
     setSceneRect(0, 0, 800, 600);
 
@@ -63,10 +69,9 @@ SceneGeneric::SceneGeneric(QObject *parent)
             addItem(new HexTile(center, isPath));
         }
     }
-    hexmenu_ = new HexMenu(static_cast<IScene *>(this));
-    connect(hexmenu_, &HexMenu::signalBuildTower,
-            this, &SceneGeneric::slotBuildTower);
-
+    QJsonObject hexcfg;
+    hexcfg["scene"] = getObjName();
+    hexmenu_ = new HexMenu(hexcfg);
     addItem(hexmenu_);
 
     // Information panel: health, wave number:
@@ -147,13 +152,15 @@ void SceneGeneric::closeActiveMenu() {
     hexmenu_->setVisible(false);
 }
 
-void SceneGeneric::slotBuildTower(const QString &towerName) {
-    TowerGeneric *newTower = nullptr;
-    if (towerName == "ArrowTower") {
-        newTower = new ArrowTower(hextileSelected_->getCenter(), this);
-    } else if (towerName == "GunTower") {
-        newTower = new GunTower(hextileSelected_->getCenter(), this);
-    }
+void SceneGeneric::buildTower(QString &clsname) {
+    ICore *core = getpCoreInterface();
+    QJsonObject cfg;
+    cfg["scene"] = getObjName();
+    cfg["posx"] = hextileSelected_->getCenter().x();
+    cfg["posy"] = hextileSelected_->getCenter().y();
+    TowerGeneric *newTower =
+        dynamic_cast<TowerGeneric *>(core->createQtClassObject(this, clsname, cfg));
+
 
     if (newTower) {
         addItem(newTower);

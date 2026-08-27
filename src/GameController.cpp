@@ -15,6 +15,7 @@
  */
 
 #include "GameController.h"
+#include <ICore.h>
 
 GameController::GameController(QGraphicsView *view, QObject *parent)
     : QObject(parent),
@@ -35,7 +36,10 @@ void GameController::startNewGame() {
     }
 
     // Initialize a completely fresh level map
-    gameScene_ = new SceneGeneric(this);
+    QJsonObject cfg;
+    gameScene_ = qobject_cast<SceneGeneric *>(
+        getpCoreInterface()->createQtClassObject(this, "SceneGeneric", cfg));
+    //gameScene_ = new SceneGeneric(this);
     gameView_->setScene(gameScene_);
 
     tmr_.start(16); // ~60 ticks per second

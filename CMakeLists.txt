@@ -21,7 +21,13 @@ set(src_top "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(qtgame_src
     ${src_top}/common/common.h
     ${src_top}/common/IFace.h
+    ${src_top}/common/ICoreObject.h
+    ${src_top}/common/ICore.h
+    ${src_top}/common/ITower.h
+    ${src_top}/common/IEnemy.h
     ${src_top}/common/IScene.h
+    ${src_top}/core.h
+    ${src_top}/core.cpp
     ${src_top}/projectile.h
     ${src_top}/projectile.cpp
     ${src_top}/towermenubtn.h

@@ -14,39 +14,47 @@
  *  limitations under the License.
  */
 
-#include "common.h"
+#include <common.h>
+#include <ICore.h>
 #include "tower.h"
 #include "projectile.h"
 #include "SceneGeneric.h"
 
-TowerGeneric::TowerGeneric(QString name,
-                           QPointF pos,
-                           QGraphicsScene *scene,
-                           QString sprite) :
-    QGraphicsPixmapItem(),
-    towername_(name),
-    scene_(scene),
-    hexCenter_(pos),
+TowerGeneric::TowerGeneric(QObject *parent,
+                 QString objname,
+                 QJsonObject &cfg) :
+    QGraphicsObject(),
+    ICoreObject(objname),
     menu_(this)
 {
+    registerInterface(static_cast<ITower *>(this));
+
+    ICore * icore = getpCoreInterface();
+    QString scenename = cfg["scene"].toString();
+    iscene_ = dynamic_cast<IScene *>(icore->getpObjInterface(scenename, "IScene"));
+
     setFlags(QGraphicsItem::ItemIsSelectable);
-    setZValue(pos.y());
+
+    qreal posx = cfg["posx"].toDouble();
+    qreal posy = cfg["posy"].toDouble();
+    hexCenter_ = QPointF(posx, posy);
+    setZValue(posy);
     attackCooldown_ = 0;
     rangeIndicator_ = 0;
 
-    spriteSheet_.load(sprite);
-    QPixmap singleFrame = spriteSheet_.copy(0, 0, 64, 64);
-    setPixmap(singleFrame);
+    spriteSheet_.load(cfg["sprite"].toString());
+    singleFrame_ = spriteSheet_.copy(0, 0, 64, 64);
+//    setPixmap(singleFrame);
 
     // THE CORRECTION: Shift the texture offset backward
     // This moves the image top-left corner so that (0,0) sits at the visual center-bottom
-    int spriteShiftY = 24 - 2;
-    qreal offsetX = -(singleFrame.width() / 2.0);
-    qreal offsetY = -singleFrame.height() + spriteShiftY; // Aligns the bottom of the tower sprite to the hex center
+//    int spriteShiftY = 24 - 2;
+//    qreal offsetX = -(singleFrame.width() / 2.0);
+//    qreal offsetY = -singleFrame.height() + spriteShiftY; // Aligns the bottom of the tower sprite to the hex center
     // center position of radius indicator should be shifter realtive picture:
-    setOffset(offsetX, offsetY);
+//    setOffset(offsetX, offsetY);
     // Position of Tower pixmap
-    setPos(pos.x(), pos.y());
+    setPos(posx, posy);
 }
 
 QVariant TowerGeneric::itemChange(GraphicsItemChange change, const QVariant &value) {
@@ -69,13 +77,31 @@ QVariant TowerGeneric::itemChange(GraphicsItemChange change, const QVariant &val
         menu_.setVisible(selected);
         update();
     }
-    return QGraphicsPixmapItem::itemChange(change, value);
+    return QGraphicsObject::itemChange(change, value);
+}
+
+QRectF TowerGeneric::boundingRect() const {
+    qreal w = singleFrame_.width();
+    qreal h = singleFrame_.height();
+    
+    // This defines a bounding box where (0,0) sits at the bottom-center of your image
+    qreal topLeftX = -(w / 2.0);
+    qreal topLeftY = -h;
+    
+    // Pad the bottom slightly (+30.0) so your custom green selection ring isn't clipped
+    return QRectF(topLeftX, topLeftY, w, h + 30.0);
 }
 
 void TowerGeneric::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
     // Create a copy of the paint style options
     QStyleOptionGraphicsItem customOption(*option);
     customOption.state &= ~QStyle::State_Selected;
+
+    painter->setRenderHint(QPainter::SmoothPixmapTransform);
+    int spriteShiftY = 24 - 2;
+    qreal topLeftX = -(singleFrame_.width() / 2.0);
+    qreal topLeftY = -singleFrame_.height() + spriteShiftY;
+    painter->drawPixmap(topLeftX, topLeftY, singleFrame_);
 
     // Draw your custom Green Selection Circle if the tower is selected
     if (this->isSelected()) {
@@ -93,7 +119,6 @@ void TowerGeneric::paint(QPainter *painter, const QStyleOptionGraphicsItem *opti
                                     2 * rx,
                                     2 * ry / 2.0));
     }
-    QGraphicsPixmapItem::paint(painter, &customOption, widget);
 }
 
 void TowerGeneric::updateCooldown() {
@@ -139,19 +164,25 @@ void TowerGeneric::updateTarget(Enemy* enemy) {
 
     // Create ballistic projectile and add to world container
     Projectile *p = getpProjectile(hexCenter_, targetPoint, enemy);
-    (dynamic_cast<SceneGeneric *>(scene_))->addProjectile(p);
+    iscene_->addProjectile(p);
     attackCooldown_ = cooldownTime_;
 }
 
 //////////////////
 // Arrow tower
-ArrowTower::ArrowTower(QPointF pos,  QGraphicsScene* scene) 
-    : TowerGeneric("ArrowTower", pos, scene, ":/images/archer_tower.png")
+ArrowTower::ArrowTower(QObject *parent,
+                       QString objname,
+                       QJsonObject &cfg) 
+    : TowerGeneric(parent, objname, cfg) //("ArrowTower", pos, scene, ":/images/archer_tower.png")
 {
     frameSpeed_ = 25;
     cooldownTime_ = 60;
     range_ = 140;
     damage_ = 25;
+
+    //QPixmap spriteSheet;
+    //spriteSheet.load(":/images/build_icons_64x8.png");
+    //icon_ = spriteSheet.copy(0 * 64, 0, 64, 64);
 }
 
 Projectile *ArrowTower::getpProjectile(QPointF &start,
@@ -166,17 +197,22 @@ Projectile *ArrowTower::getpProjectile(QPointF &start,
 
 
 ////////////////
-// Gun tower
-GunTower::GunTower(QPointF pos,  QGraphicsScene* scene)
-    : TowerGeneric("ArrowTower", pos, scene, ":/images/rifle_tower.png")
+// Rifle tower
+RifleTower::RifleTower(QObject *parent,
+                       QString objname,
+                       QJsonObject &cfg)//QPointF pos,  QGraphicsScene* scene)
+    : TowerGeneric(parent, objname, cfg) //"RifleTower", pos, scene, ":/images/rifle_tower.png")
 {
     frameSpeed_ = 7;
     cooldownTime_ = 75;
     range_ = 150;
     damage_ = 30;
+    //QPixmap spriteSheet;
+    //spriteSheet.load(":/images/build_icons_64x8.png");
+    //icon_ = spriteSheet.copy(1 * 64, 0, 64, 64);
 }
 
-Projectile *GunTower::getpProjectile(QPointF &start,
+Projectile *RifleTower::getpProjectile(QPointF &start,
                                      QPointF &target,
                                      Enemy* enemy) {
     return new Bullet(start,

@@ -16,14 +16,16 @@
 
 #pragma once
 
-#include <inttypes.h>
 #include "IFace.h"
+#include "projectile.h"
 
 class IScene : public Interface {
  public:
     IScene() : Interface("IScene") {}
 
     virtual bool isGoldAvailable(int gold) = 0;
+    virtual void buildTower(QString &clsname) = 0;
+    virtual void addProjectile(Projectile *p) = 0;
 };
 
 

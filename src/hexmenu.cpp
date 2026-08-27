@@ -14,31 +14,43 @@
  *  limitations under the License.
  */
 
+#include <ICore.h>
+#include <QJsonObject>
+#include <QJsonArray>
 #include "hexmenu.h"
 
 static const qreal ORBIT_DISTANCE = 54.0; 
 static const qreal BTN_RADIUS = 24.0;
 
 
-HexMenu::HexMenu(IScene *iscene, QGraphicsObject *parent)
-    : QGraphicsObject(parent),
-    iscene_(iscene)
+HexMenu::HexMenu(QJsonObject &cfg) : QGraphicsObject()
 {
-    // Orbit button positioning distance out from the tower center point
+    ICore * icore = getpCoreInterface();
+    QString scenename = cfg["scene"].toString();
+    iscene_ = dynamic_cast<IScene *>(icore->getpObjInterface(scenename, "IScene"));
 
-    // Position Upgrade button to the Left, Sell button to the Right
-    Btn1_ = new HexMenuButton(iscene, 1, "GunTower", BTN_RADIUS, this);
-    Btn1_->setPos(ORBIT_DISTANCE * sin(0), 
-                    ORBIT_DISTANCE * cos(0));
-    connect(Btn1_, &HexMenuButton::signalPressed,
-            this, &HexMenu::slotButtonClicked);
+    QJsonArray jsonBtn;
+    QJsonObject btnCfg;
+    btnCfg["scene"] = cfg["scene"];
+    btnCfg["ClassName"] = "ArrowTower";
+    btnCfg["radius"] = BTN_RADIUS;
+    btnCfg["price"] = 50;
+    btnCfg["iconFile"] = ":/images/build_icons_64x8.png";
+    btnCfg["iconx"] = 0;
+    jsonBtn.append(btnCfg);
 
+    btnCfg["ClassName"] = "RifleTower";
+    btnCfg["iconx"] = 64;
+    jsonBtn.append(btnCfg);
 
-    Btn2_ = new HexMenuButton(iscene, 0, "ArrowTower", BTN_RADIUS, this);
-    Btn2_->setPos(ORBIT_DISTANCE * sin(M_PI/3), 
-                  ORBIT_DISTANCE * cos(M_PI/3));
-    connect(Btn2_, &HexMenuButton::signalPressed,
-            this, &HexMenu::slotButtonClicked);
+    for (int i = 0; i < BTN_MAX; i++ ) {
+        QJsonObject obj = jsonBtn.at(i).toObject();
+        Btn_[i] = new HexMenuButton(this, obj);
+        Btn_[i]->setPos(ORBIT_DISTANCE * sin(i * M_PI/3), 
+                        ORBIT_DISTANCE * cos(i * M_PI/3));
+        connect(Btn_[i], &HexMenuButton::signalPressed,
+                this, &HexMenu::slotButtonClicked);
+    }
 
     setZValue(2000);    // Always stay stacked on top of towers and projectiles
     setVisible(false);
@@ -61,6 +73,6 @@ void HexMenu::paint(QPainter* painter,
                                 2*ORBIT_DISTANCE));
 }
 
-void HexMenu::slotButtonClicked(const QString &towerName) {
-    emit signalBuildTower(towerName);
+void HexMenu::slotButtonClicked(QString &clsname) {
+    iscene_->buildTower(clsname);
 }

@@ -21,12 +21,14 @@
 #include <QPointF>
 #include <QList>
 #include <QBrush>
+#include <QJsonObject>
 #include "tower.h"
 #include "enemy.h"
 #include "projectile.h"
 #include "hexmenu.h"
 #include "hextile.h"
 #include "InfoPanel.h"
+#include <ICoreObject.h>
 #include <IScene.h>
 
 struct Waypoint {
@@ -35,18 +37,23 @@ struct Waypoint {
 };
 
 class SceneGeneric : public QGraphicsScene,
+                     public ICoreObject,
                      public IScene {
     Q_OBJECT
  public:
-    SceneGeneric(QObject *parent = nullptr);
+    Q_INVOKABLE SceneGeneric(QObject *parent,
+                             QString objname,
+                             QJsonObject &config);
 
     // IScene
     virtual bool isGoldAvailable(int gold) override {
         return goldCnt_ >= gold;
     }
+    void buildTower(QString &clsname) override;
+    virtual void addProjectile(Projectile *p) override;
+
 
     virtual void gameLoop();
-    virtual void addProjectile(Projectile *p);
 
  protected:
     virtual void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
@@ -56,9 +63,6 @@ class SceneGeneric : public QGraphicsScene,
     void signalUpdateGold(int gold);
     void signalUpdateLives(int lives);
     void signalUpdateWave(int wave);
-
- public slots:
-    void slotBuildTower(const QString &towerName);
 
  private:
     // Helper to turn grid columns/rows into exact screen pixel centers

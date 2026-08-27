@@ -15,22 +15,28 @@
 */
 
 #include "hexmenubtn.h"
+#include <ICore.h>
 
-HexMenuButton::HexMenuButton(IScene *iscene,
-                             int iconIdx,
-                             QString name,
-                             qreal radius,
-                             QGraphicsObject* parent)
+HexMenuButton::HexMenuButton(QGraphicsObject* parent,
+                             QJsonObject &cfg)
     : QGraphicsObject(parent),
-    iscene_(iscene),
-    name_(name),
-    radius_(radius),
     isHovered_(false) 
 {
+    twrclsname_ = cfg["ClassName"].toString();
+    radius_ = cfg["radius"].toDouble();
+    price_ = cfg["price"].toInt();
+    QString iconFile = cfg["iconFile"].toString();
+    int iconx = cfg["iconx"].toInt();
+
+    ICore * icore = getpCoreInterface();
+    QString scenename = cfg["scene"].toString();
+    iscene_ = dynamic_cast<IScene *>(icore->getpObjInterface(scenename, "IScene"));
+
     QPixmap spriteSheet;
-    spriteSheet.load(":/images/build_icons_64x8.png");
+    spriteSheet.load(iconFile);
+
     int targetDiameter = static_cast<int>(radius_ * 2.0);
-    QPixmap coverOriginal = spriteSheet.copy(iconIdx * 64, 0, 64, 64);
+    QPixmap coverOriginal = spriteSheet.copy(iconx, 0, 64, 64);
     coverImage_ = coverOriginal.scaled(targetDiameter, targetDiameter, 
                                           Qt::KeepAspectRatio, 
                                           Qt::SmoothTransformation);
@@ -53,7 +59,7 @@ void HexMenuButton::paint(QPainter* painter,
     painter->drawPixmap(topLeftX, topLeftY, coverImage_);
 
     // Add a visual feedback overlay if hovered (like a subtle dark or light tint)
-    if (!iscene_->isGoldAvailable(50)) {
+    if (!iscene_->isGoldAvailable(price_)) {
         painter->setBrush(QColor(255, 255, 255, 140));
         painter->setPen(Qt::NoPen);
         painter->drawEllipse(boundingRect());
@@ -65,7 +71,9 @@ void HexMenuButton::paint(QPainter* painter,
 }
 
 void HexMenuButton::mousePressEvent(QGraphicsSceneMouseEvent* event) {
-    emit signalPressed(name_);
+    if (iscene_->isGoldAvailable(price_)) {
+        emit signalPressed(twrclsname_);
+    }
     event->accept(); // Block event from dropping to map behind
 }
 

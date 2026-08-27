@@ -16,24 +16,29 @@
 
 #pragma once
 
-#include <QGraphicsPolygonItem>
-#include <QPointF>
-#include "hexmenu.h"
+#include <ICore.h>
+#include <QList>
+#include <QHash>
 
-class HexTile : public QGraphicsPolygonItem {
+class Core : public ICore {
  public:
-    HexTile(QPointF center, bool isPath);
+    Core();
 
-    QPointF getCenter() { return center_; }
-    bool isBuildAvailable() {
-        return !isPath_ && !isBlocked_ && tower_ == nullptr;
-    }
-    void attachTower(QGraphicsObject *tower) { tower_ = tower; }
-    void dettachTower() { tower_ = 0; }
+    virtual void configurate(QString filename) override;
+
+    virtual QObject *createQtClassObject(QObject *parent,
+                                         QString clsname,
+                                         QJsonObject &jsonarg) override;
+
+    virtual void registerCoreObject(QString objname,
+                                    Interface *iface) override;
+
+    virtual Interface *getpObjInterface(QString objname,
+                                        QString iname) override;
+
+ protected:
 
  private:
-    QGraphicsObject *tower_;
-    QPointF center_;
-    bool isPath_;
-    bool isBlocked_;
+    QHash<QString, Interface *> objList_;
+    int uniqueIdx_;
 };

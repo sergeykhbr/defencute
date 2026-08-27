@@ -25,19 +25,16 @@
 class HexMenu : public QGraphicsObject {
     Q_OBJECT
  public:
-    explicit HexMenu(IScene *iscene, QGraphicsObject* parent = nullptr);
+    explicit HexMenu(QJsonObject &cfg);
 
-    virtual QRectF boundingRect() const ;
+    virtual QRectF boundingRect() const override;
     virtual void paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget*) override;
 
- signals:
-    void signalBuildTower(const QString &);
-
  protected slots:
-    void slotButtonClicked(const QString &towerName);
+    void slotButtonClicked(QString &clsname);
 
  private:
+    static const int BTN_MAX = 2;
     IScene *iscene_;
-    HexMenuButton* Btn1_;
-    HexMenuButton* Btn2_;
+    HexMenuButton* Btn_[BTN_MAX];
 };

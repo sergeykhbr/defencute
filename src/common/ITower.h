@@ -16,24 +16,14 @@
 
 #pragma once
 
-#include <QGraphicsPolygonItem>
-#include <QPointF>
-#include "hexmenu.h"
+#include <IFace.h>
+#include <QPixmap>
 
-class HexTile : public QGraphicsPolygonItem {
+class ITower : public Interface {
  public:
-    HexTile(QPointF center, bool isPath);
+    ITower() : Interface("ITower") {}
 
-    QPointF getCenter() { return center_; }
-    bool isBuildAvailable() {
-        return !isPath_ && !isBlocked_ && tower_ == nullptr;
-    }
-    void attachTower(QGraphicsObject *tower) { tower_ = tower; }
-    void dettachTower() { tower_ = 0; }
 
- private:
-    QGraphicsObject *tower_;
-    QPointF center_;
-    bool isPath_;
-    bool isBlocked_;
 };
+
+

@@ -16,12 +16,14 @@
 
 #pragma once
 
+#include <QString>
+
 class Interface {
  public:
-    explicit Interface(const char *name) : faceName_(name) {}
+    explicit Interface(QString name) : faceName_(name) {}
 
-    virtual const char *GetFaceName() { return faceName_; }
+    virtual QString getFaceName() { return faceName_; }
 
  private:
-    const char *faceName_;
+    QString faceName_;
 };

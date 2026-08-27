@@ -14,11 +14,15 @@
  *  limitations under the License.
  */
 
+#include <ICore.h>
 #include <QtWidgets/QApplication>
 #include "MainWindow.h"
 
 int main(int argc, char **argv)
 {
+    ICore *core = getpCoreInterface();
+    core->configurate("example.json");
+
     QApplication app(argc, argv);
 
     MainWindow window;
