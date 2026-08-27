@@ -139,6 +139,7 @@ void SceneGeneric::mousePressEvent(QGraphicsSceneMouseEvent* event) {
     closeActiveMenu();
 
     if (qgraphicsitem_cast<TowerGeneric *>(item)) {
+        bool st = true;
     } else if (qgraphicsitem_cast<HexTile *>(item)) {
         hextileSelected_ = qgraphicsitem_cast<HexTile *>(item);
         if (hextileSelected_->isBuildAvailable()) {

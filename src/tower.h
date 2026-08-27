@@ -31,10 +31,10 @@
 #include "projectile.h"
 #include "towermenu.h"
 
-class TowerGeneric : public QGraphicsObject,
+class TowerGeneric : public QGraphicsPixmapItem,//QGraphicsObject,
                      public ICoreObject,
                      public ITower {
-    Q_OBJECT
+    //Q_OBJECT
  public:
     TowerGeneric(QObject *parent,
                  QString objname,
@@ -58,20 +58,18 @@ class TowerGeneric : public QGraphicsObject,
                        const QStyleOptionGraphicsItem *option,
                        QWidget *widget) override;
 
-    virtual QRectF boundingRect() const override;
+    //virtual QRectF boundingRect() const override;
 
     virtual Projectile *getpProjectile(QPointF &start,
                                        QPointF &target,
                                        Enemy* enemy) = 0;
 
  protected:
-    //QGraphicsScene* scene_;
     IScene *iscene_;
     QPointF hexCenter_;
     QPixmap spriteSheet_;
     QPixmap singleFrame_;
 
-    //QPixmap icon_;          // menu icon
     int cooldownTime_;
     int attackCooldown_;
     int frameSpeed_;
@@ -82,7 +80,7 @@ class TowerGeneric : public QGraphicsObject,
 };
 
 class ArrowTower : public TowerGeneric {
-    Q_OBJECT
+    //Q_OBJECT
  public:
     Q_INVOKABLE ArrowTower(QObject *parent,
                             QString objname,
@@ -94,7 +92,7 @@ class ArrowTower : public TowerGeneric {
 };
 
 class RifleTower : public TowerGeneric {
-    Q_OBJECT
+    //Q_OBJECT
  public:
     Q_INVOKABLE RifleTower(QObject *parent,
                            QString objname,

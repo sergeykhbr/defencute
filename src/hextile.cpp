@@ -19,7 +19,7 @@
 
 HexTile::HexTile(QPointF center, bool isPath)
     : QGraphicsPolygonItem(),
-    tower_(nullptr)
+    itower_(nullptr)
 {
     QBrush bgBrush = isPath ? QBrush(QColor(230, 230, 230))
                             : QBrush(Qt::transparent);

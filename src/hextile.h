@@ -19,6 +19,7 @@
 #include <QGraphicsPolygonItem>
 #include <QPointF>
 #include "hexmenu.h"
+#include <ITower.h>
 
 class HexTile : public QGraphicsPolygonItem {
  public:
@@ -26,13 +27,13 @@ class HexTile : public QGraphicsPolygonItem {
 
     QPointF getCenter() { return center_; }
     bool isBuildAvailable() {
-        return !isPath_ && !isBlocked_ && tower_ == nullptr;
+        return !isPath_ && !isBlocked_ && itower_ == nullptr;
     }
-    void attachTower(QGraphicsObject *tower) { tower_ = tower; }
-    void dettachTower() { tower_ = 0; }
+    void attachTower(ITower *tower) { itower_ = tower; }
+    void dettachTower() { itower_ = nullptr; }
 
  private:
-    QGraphicsObject *tower_;
+    ITower *itower_;
     QPointF center_;
     bool isPath_;
     bool isBlocked_;

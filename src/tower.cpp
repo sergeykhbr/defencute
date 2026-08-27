@@ -23,7 +23,7 @@
 TowerGeneric::TowerGeneric(QObject *parent,
                  QString objname,
                  QJsonObject &cfg) :
-    QGraphicsObject(),
+    QGraphicsPixmapItem(),
     ICoreObject(objname),
     menu_(this)
 {
@@ -77,10 +77,10 @@ QVariant TowerGeneric::itemChange(GraphicsItemChange change, const QVariant &val
         menu_.setVisible(selected);
         update();
     }
-    return QGraphicsObject::itemChange(change, value);
+    return QGraphicsPixmapItem::itemChange(change, value);
 }
 
-QRectF TowerGeneric::boundingRect() const {
+/*QRectF TowerGeneric::boundingRect() const {
     qreal w = singleFrame_.width();
     qreal h = singleFrame_.height();
     
@@ -90,9 +90,11 @@ QRectF TowerGeneric::boundingRect() const {
     
     // Pad the bottom slightly (+30.0) so your custom green selection ring isn't clipped
     return QRectF(topLeftX, topLeftY, w, h + 30.0);
-}
+}*/
 
 void TowerGeneric::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
+    QGraphicsPixmapItem::paint(painter, option, widget);
+
     // Create a copy of the paint style options
     QStyleOptionGraphicsItem customOption(*option);
     customOption.state &= ~QStyle::State_Selected;
