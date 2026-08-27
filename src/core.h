@@ -26,6 +26,8 @@ class Core : public ICore {
 
     virtual void configurate(QString filename) override;
 
+    virtual void registerCoreClass(QString name, Interface *iclsface) override;
+
     virtual QObject *createQtClassObject(QObject *parent,
                                          QString clsname,
                                          QJsonObject &jsonarg) override;

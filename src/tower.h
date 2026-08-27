@@ -24,6 +24,7 @@
 #include <QVector2D>
 #include <QList>
 #include <QJsonObject>
+#include <ICoreClass.h>
 #include <ICoreObject.h>
 #include <IScene.h>
 #include <ITower.h>
@@ -102,3 +103,7 @@ class RifleTower : public TowerGeneric {
                                        QPointF &target,
                                        Enemy* enemy);
 };
+
+
+DECLARE_CLASS(ArrowTower)
+DECLARE_CLASS(RifleTower)

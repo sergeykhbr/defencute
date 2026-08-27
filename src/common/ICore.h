@@ -26,6 +26,8 @@ class ICore : public Interface {
 
     virtual void configurate(QString filename) = 0;
 
+    virtual void registerCoreClass(QString name, Interface *iclsface) = 0;
+
     virtual QObject *createQtClassObject(QObject *parent,
                                          QString clsname,
                                          QJsonObject &jsonarg) = 0;

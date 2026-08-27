@@ -29,6 +29,8 @@ class ICoreObject : public Interface {
 
     virtual QString getObjName() { return objName_; }
 
+    virtual void setClassOwner(Interface *iclsface) { iclsface_ = iclsface; }
+
     virtual void registerInterface(Interface *iface) {
         listInterfaces_.append(iface);
     }
@@ -44,6 +46,7 @@ class ICoreObject : public Interface {
 
  private:
     QString objName_;
+    Interface *iclsface_;
     QList<Interface *> listInterfaces_;
 };
 

@@ -28,6 +28,7 @@
 #include "hexmenu.h"
 #include "hextile.h"
 #include "InfoPanel.h"
+#include <ICoreClass.h>
 #include <ICoreObject.h>
 #include <IScene.h>
 
@@ -87,3 +88,5 @@ class SceneGeneric : public QGraphicsScene,
     int livesCnt_;
     int wavesCnt_;
 };
+
+DECLARE_CLASS(SceneGeneric)

@@ -46,6 +46,8 @@ void Core::registerCoreObject(QString objname,
     objList_[objname] = iface;
 }
 
+void Core::registerCoreClass(QString name, Interface *iclsface) {
+}
 
 QObject *Core::createQtClassObject(QObject *parent,
                                    QString clsname,
