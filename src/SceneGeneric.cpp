@@ -54,37 +54,38 @@ SceneGeneric::SceneGeneric(QObject *parent,
         visualPathPixelPoints.append(getHexCenter(wp.col, wp.row));
     }
 
-    // Draw the background grid and high-light the path tiles
-    QJsonArray routes = cfg_.value("Routes").toArray();
-    for (auto route : routes) {
-        QJsonObject routeObj = route.toObject();
-        int startx = routeObj["StartX"].toInt();
-        int starty = routeObj["StartY"].toInt();
-        QJsonArray routeSteps = routeObj.value("Steps").toArray();
-        for (auto step : routeSteps) {
-            QJsonObject stepObj = step.toObject();
-            int dx = stepObj["x"].toInt();
-            int dy = stepObj["y"].toInt();
-            int N = stepObj["N"].toInt();
-        }
-    }
-
+    int ztile = cfg_["ZDepth"].toObject()["HexTile"].toInt();
     for (int col = 0; col < hexHNum_; ++col) {
         for (int row = 0; row < hexVNum_; ++row) {
             QPointF center = getHexCenter(col, row);
-
-            // Determine if this background hex sits on our winding road
-            bool isPath = false;
-            // Simple logical approximation for drawing the lines connecting waypoints
-            for (int i = 0; i < mapRoad.size() - 1; ++i) {
-                Waypoint start = mapRoad[i];
-                Waypoint end = mapRoad[i+1];
-                if (start.col == end.col && col == start.col && row >= std::min(start.row, end.row) && row <= std::max(start.row, end.row)) isPath = true;
-                if (start.row == end.row && row == start.row && col >= std::min(start.col, end.col) && col <= std::max(start.col, end.col)) isPath = true;
-            }
-            addItem(new HexTile(center, isPath));
+            HexTile *hex = new HexTile(center, ztile);
+            setpTile(hex, col, row);
+            addItem(hex);
         }
     }
+    // high-light the path tiles
+    QJsonArray routes = cfg_.value("Routes").toArray();
+    for (auto route : routes) {
+        QJsonObject routeObj = route.toObject();
+        int x = routeObj["StartX"].toInt();
+        int y = routeObj["StartY"].toInt();
+        getpTile(x, y)->setAsPath();
+
+        QJsonArray routeSteps = routeObj.value("Steps").toArray();
+        for (auto step : routeSteps) {
+            QJsonObject stepObj = step.toObject();
+            int dx = stepObj["dx"].toInt();
+            int dy = stepObj["dy"].toInt();
+            int N = stepObj["N"].toInt();
+            for (int i = 0; i < N; i++) {
+                x += dx;
+                y += dy;
+                getpTile(x, y)->setAsPath();
+            }
+        }
+    }
+
+
     hexmenu_ = new HexMenu(cfg_);
     addItem(hexmenu_);
 
@@ -114,6 +115,16 @@ SceneGeneric::SceneGeneric(QObject *parent,
     emit signalUpdateGold(goldCnt_);
     emit signalUpdateLives(livesCnt_);
     emit signalUpdateWave(wavesCnt_);
+}
+
+void SceneGeneric::setpTile(HexTile *tile, int x, int y) {
+    int h = (x << 16) | (y & 0xFFFF);
+    tiles_[h] = tile;
+}
+
+HexTile *SceneGeneric::getpTile(int x, int y) {
+    int h = (x << 16) | (y & 0xFFFF);
+    return tiles_[h];
 }
 
 void SceneGeneric::resetCurrentHighlight() {

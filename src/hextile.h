@@ -28,13 +28,15 @@
 class HexTile : public QGraphicsObject {
     Q_OBJECT
  public:
-    HexTile(QPointF center, bool isPath);
+    HexTile(QPointF center, qreal zvalue);
 
     // Mandatory QGraphicsObject overrides replacing internal polygon logic
-    QRectF boundingRect() const override;
-    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
-    QPainterPath shape() const override; // Ensures perfect pixel-accurate hexagon mouse clicks
+    virtual QRectF boundingRect() const override;
+    virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
+    virtual QPainterPath shape() const override; // Ensures perfect pixel-accurate hexagon mouse clicks
 
+    // Common public methods:
+    void setAsPath();
     QPointF getCenter() { return center_; }
     bool isBuildAvailable() {
         return !isPath_ && !isBlocked_ && itower_ == nullptr;

@@ -17,25 +17,29 @@
 #include "common.h"
 #include "hextile.h"
 
-HexTile::HexTile(QPointF center, bool isPath)
+HexTile::HexTile(QPointF center, qreal zvalue)
     : QGraphicsObject(),
     itower_(nullptr)
 {
-    brush_ = isPath ? QBrush(QColor(230, 230, 230))
-                            : QBrush(Qt::transparent);
-    pen_ = isPath ? QPen(Qt::NoPen)
-                        : QPen(QColor(240, 240, 240));
+    brush_ = QBrush(Qt::transparent);
+    pen_ = QPen(QColor(240, 240, 240));
     for (int i = 0; i < 6; ++i) {
         qreal angle_rad = M_PI / 3 * i;
         polygon_ << QPointF(center.x() + HEX_RADIUS_X * cos(angle_rad),
                            center.y() + HEX_RADIUS_Y * sin(angle_rad));
     }
-    setZValue(-10);
+    setZValue(zvalue);
 
-    isPath_ = isPath;
     center_ = center;
+    isPath_ = false;
     isBlocked_ = false;
     isSelected_ = false;
+}
+
+void HexTile::setAsPath() {
+    brush_ = QBrush(QColor(230, 230, 230));
+    pen_ = QPen(Qt::NoPen);
+    isPath_ = true;
 }
 
 QRectF HexTile::boundingRect() const {

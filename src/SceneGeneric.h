@@ -64,6 +64,8 @@ class SceneGeneric : public QGraphicsScene,
 
  private:
     // Helper to turn grid columns/rows into exact screen pixel centers
+    void setpTile(HexTile *tile, int x, int y);
+    HexTile *getpTile(int x, int y);
     void resetCurrentHighlight();
     QPointF getHexCenter(int col, int row);
     void sortEnemies();
@@ -75,6 +77,7 @@ class SceneGeneric : public QGraphicsScene,
     QList<Enemy *> enemies_;
     QList<TowerGeneric *> towers_;
     QList<Projectile *> projectiles_;
+    QHash<int, HexTile *> tiles_;
     QList<QPointF> visualPathPixelPoints;
     QHash<QString, QList<Waypoint>> routes_;
     HexMenu *hexmenu_;
