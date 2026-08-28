@@ -15,13 +15,16 @@
  */
 
 #include "GameController.h"
-#include <ICore.h>
 
-GameController::GameController(QGraphicsView *view, QObject *parent)
+GameController::GameController(QObject *parent,
+                               QGraphicsView *view,
+                               QJsonObject &cfg)
     : QObject(parent),
+    cfg_(cfg),
     gameView_(view),
     gameScene_(nullptr)
 {
+    icore_ = getpCoreInterface();
     // Setup the physics/game loop timer (60 FPS)
     connect(&tmr_, &QTimer::timeout, this, &GameController::tick);
 }
@@ -36,20 +39,24 @@ void GameController::startNewGame() {
     }
 
     // Initialize a completely fresh level map
-    QJsonObject cfg;
+    QJsonObject ctrlcfg = cfg_["controller"].toObject();
     gameScene_ = qobject_cast<SceneGeneric *>(
-        getpCoreInterface()->createQtClassObject(this, "SceneGeneric", cfg));
-    //gameScene_ = new SceneGeneric(this);
+        icore_->createQtClassObject(this,
+                                    ctrlcfg["Level"].toString(),
+                                    cfg_));
     gameView_->setScene(gameScene_);
 
-    tmr_.start(16); // ~60 ticks per second
+    int tickms = ctrlcfg["TickMs"].toInt();
+    tmr_.start(tickms); // ~60 ticks per second
 }
 
 void GameController::togglePause(bool paused) {
     if (paused) {
         tmr_.stop();
     } else {
-        tmr_.start(16);
+        QJsonObject ctrlcfg = cfg_["controller"].toObject();
+        int tickms = ctrlcfg["TickMs"].toInt();
+        tmr_.start(tickms);
     }
 }
 

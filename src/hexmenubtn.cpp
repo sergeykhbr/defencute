@@ -18,19 +18,28 @@
 #include <ICore.h>
 
 HexMenuButton::HexMenuButton(QGraphicsObject* parent,
-                             QJsonObject &cfg)
+                             QJsonObject &cfg,
+                             qreal radius)
     : QGraphicsObject(parent),
-    twrcfg_(cfg),
+    cfg_(cfg),
+    radius_(radius),
     isHovered_(false) 
 {
-    radius_ = cfg["radius"].toDouble();
-    price_ = cfg["price"].toInt();
-    QString iconFile = cfg["iconFile"].toString();
-    int iconx = cfg["iconx"].toInt();
-
     ICore * icore = getpCoreInterface();
     QString scenename = cfg["scene"].toString();
     iscene_ = dynamic_cast<IScene *>(icore->getpObjInterface(scenename, "IScene"));
+
+    setAcceptHoverEvents(true);
+}
+
+void HexMenuButton::selectTower(QString towerName) {
+    selectedTower_ = towerName;
+    QJsonValueRef towers = cfg_["towers"];
+    QJsonObject twrcfg = towers.toObject()[towerName].toObject();
+
+    price_ = twrcfg["price"].toInt();
+    QString iconFile = twrcfg["iconFile"].toString();
+    int iconx = twrcfg["iconx"].toInt();
 
     QPixmap spriteSheet;
     spriteSheet.load(iconFile);
@@ -40,8 +49,6 @@ HexMenuButton::HexMenuButton(QGraphicsObject* parent,
     coverImage_ = coverOriginal.scaled(targetDiameter, targetDiameter, 
                                           Qt::KeepAspectRatio, 
                                           Qt::SmoothTransformation);
-
-    setAcceptHoverEvents(true);
 }
 
 QRectF HexMenuButton::boundingRect() const {
@@ -72,7 +79,7 @@ void HexMenuButton::paint(QPainter* painter,
 
 void HexMenuButton::mousePressEvent(QGraphicsSceneMouseEvent* event) {
     if (iscene_->isGoldAvailable(price_)) {
-        emit signalPressed(twrcfg_);
+        emit signalPressed(selectedTower_);
     }
     event->accept(); // Block event from dropping to map behind
 }

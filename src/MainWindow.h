@@ -18,12 +18,13 @@
 
 #include <QMainWindow>
 #include <QStackedLayout>
+#include <QJsonObject>
 #include "GameController.h"
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
  public:
-    explicit MainWindow(QWidget *parent = nullptr);
+    explicit MainWindow(QJsonObject &cfg);
 
   protected:
     virtual void keyPressEvent(QKeyEvent *event) override;

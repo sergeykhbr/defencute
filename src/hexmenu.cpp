@@ -23,39 +23,41 @@ static const qreal ORBIT_DISTANCE = 54.0;
 static const qreal BTN_RADIUS = 24.0;
 
 
-HexMenu::HexMenu(QJsonObject &cfg) : QGraphicsObject()
+HexMenu::HexMenu(QJsonObject &cfg) : QGraphicsObject(), cfg_(cfg)
 {
     ICore * icore = getpCoreInterface();
     QString scenename = cfg["scene"].toString();
     iscene_ = dynamic_cast<IScene *>(icore->getpObjInterface(scenename, "IScene"));
 
-    QJsonArray jsonBtn;
-    QJsonObject btnCfg;
-    btnCfg["scene"] = cfg["scene"];
-    btnCfg["ClassName"] = "ArrowTower";
-    btnCfg["radius"] = BTN_RADIUS;
-    btnCfg["price"] = 50;
-    btnCfg["iconFile"] = ":/images/build_icons_64x8.png";
-    btnCfg["sprite"] = ":/images/archer_tower.png";
-    btnCfg["iconx"] = 0;
-    jsonBtn.append(btnCfg);
+    QJsonObject hexmenu = cfg["HexMenu"].toObject();
+    QJsonArray btnTowers = hexmenu["BtnTowers"].toArray();
+    QJsonObject towers = cfg["towers"].toObject();
 
-    btnCfg["ClassName"] = "RifleTower";
-    btnCfg["sprite"] = ":/images/rifle_tower.png";
-    btnCfg["iconx"] = 64;
-    jsonBtn.append(btnCfg);
+    btnMax_ = hexmenu["BtnMax"].toInt();
+    Btn_ = new HexMenuButton* [btnMax_];
 
-    for (int i = 0; i < BTN_MAX; i++ ) {
-        QJsonObject obj = jsonBtn.at(i).toObject();
-        Btn_[i] = new HexMenuButton(this, obj);
+    for (int i = 0; i < btnMax_; i++) {
+        QString twrName = btnTowers.at(i).toString();
+        if (twrName.isEmpty()) {
+            Btn_[i] = nullptr;
+            continue;
+        }
+        Btn_[i] = new HexMenuButton(this, cfg_, BTN_RADIUS);
         Btn_[i]->setPos(ORBIT_DISTANCE * sin(i * M_PI/3), 
                         ORBIT_DISTANCE * cos(i * M_PI/3));
+        Btn_[i]->selectTower(twrName);
         connect(Btn_[i], &HexMenuButton::signalPressed,
                 this, &HexMenu::slotButtonClicked);
     }
 
-    setZValue(2000);    // Always stay stacked on top of towers and projectiles
+    QJsonValueRef zdepth = cfg_["ZDepth"];
+    int z = zdepth.toObject()["HexMenu"].toInt();
+    setZValue(z);
     setVisible(false);
+}
+
+HexMenu::~HexMenu() {
+    delete [] Btn_;
 }
 
 QRectF HexMenu::boundingRect() const {
@@ -75,6 +77,6 @@ void HexMenu::paint(QPainter* painter,
                                 2*ORBIT_DISTANCE));
 }
 
-void HexMenu::slotButtonClicked(QJsonObject &twrcfg) {
-    iscene_->buildTower(twrcfg);
+void HexMenu::slotButtonClicked(QString &towername) {
+    iscene_->buildTower(towername);
 }

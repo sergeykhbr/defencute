@@ -23,7 +23,7 @@
 TowerGeneric::TowerGeneric(QObject *parent,
                  QString objname,
                  QJsonObject &cfg) :
-    QGraphicsObject(),//QGraphicsPixmapItem(),
+    QGraphicsObject(),
     ICoreObject(objname),
     menu_(this)
 {
@@ -83,9 +83,6 @@ QRectF TowerGeneric::boundingRect() const {
 }
 
 void TowerGeneric::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
-    //QGraphicsPixmapItem::paint(painter, option, widget);
-
-    // Create a copy of the paint style options
     QStyleOptionGraphicsItem customOption(*option);
     customOption.state &= ~QStyle::State_Selected;
 
@@ -165,16 +162,12 @@ void TowerGeneric::updateTarget(Enemy* enemy) {
 ArrowTower::ArrowTower(QObject *parent,
                        QString objname,
                        QJsonObject &cfg) 
-    : TowerGeneric(parent, objname, cfg) //("ArrowTower", pos, scene, ":/images/archer_tower.png")
+    : TowerGeneric(parent, objname, cfg)
 {
     frameSpeed_ = 25;
     cooldownTime_ = 60;
     range_ = 140;
     damage_ = 25;
-
-    //QPixmap spriteSheet;
-    //spriteSheet.load(":/images/build_icons_64x8.png");
-    //icon_ = spriteSheet.copy(0 * 64, 0, 64, 64);
 }
 
 Projectile *ArrowTower::getpProjectile(QPointF &start,
@@ -192,16 +185,13 @@ Projectile *ArrowTower::getpProjectile(QPointF &start,
 // Rifle tower
 RifleTower::RifleTower(QObject *parent,
                        QString objname,
-                       QJsonObject &cfg)//QPointF pos,  QGraphicsScene* scene)
-    : TowerGeneric(parent, objname, cfg) //"RifleTower", pos, scene, ":/images/rifle_tower.png")
+                       QJsonObject &cfg)
+    : TowerGeneric(parent, objname, cfg)
 {
     frameSpeed_ = 7;
     cooldownTime_ = 75;
     range_ = 150;
     damage_ = 30;
-    //QPixmap spriteSheet;
-    //spriteSheet.load(":/images/build_icons_64x8.png");
-    //icon_ = spriteSheet.copy(1 * 64, 0, 64, 64);
 }
 
 Projectile *RifleTower::getpProjectile(QPointF &start,

@@ -26,6 +26,8 @@ class Core : public ICore {
 
     virtual void configurate(QString filename) override;
 
+    virtual QJsonObject toJsonObject(QString str) override;
+
     virtual void registerCoreClass(QString name, Interface *iclsface) override;
 
     virtual QObject *createQtClassObject(QObject *parent,
@@ -41,6 +43,7 @@ class Core : public ICore {
  protected:
 
  private:
+    QJsonObject cfg_;
     QHash<QString, Interface *> objList_;
     int uniqueIdx_;
 };

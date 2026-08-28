@@ -50,7 +50,7 @@ class SceneGeneric : public QGraphicsScene,
     virtual bool isGoldAvailable(int gold) override {
         return goldCnt_ >= gold;
     }
-    void buildTower(QJsonObject &twrcfg) override;
+    virtual void buildTower(QString &towername) override;
     virtual void addProjectile(Projectile *p) override;
 
 
@@ -73,6 +73,8 @@ class SceneGeneric : public QGraphicsScene,
     void closeActiveMenu();
 
  private:
+    QJsonObject &cfg_;
+    QJsonObject cfgmenu_;
     QList<Enemy *> enemies_;
     QList<TowerGeneric *> towers_;
     QList<Projectile *> projectiles_;

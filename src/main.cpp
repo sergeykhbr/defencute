@@ -16,18 +16,13 @@
 
 #include <ICore.h>
 #include <QtWidgets/QApplication>
-#include "MainWindow.h"
 
 int main(int argc, char **argv)
 {
-    ICore *core = getpCoreInterface();
-    core->configurate("example.json");
-
     QApplication app(argc, argv);
 
-    MainWindow window;
-    window.setWindowTitle("Simple 2D Tower Defense Step 1");
-    window.show();
+    ICore *core = getpCoreInterface();
+    core->configurate("example.json");
 
     return app.exec();
 }

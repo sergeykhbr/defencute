@@ -19,6 +19,8 @@
 #include <QObject>
 #include <QTimer>
 #include <QGraphicsView>
+#include <QJsonObject>
+#include <ICore.h>
 #include "SceneGeneric.h"
 #include "GameView.h"
 
@@ -26,7 +28,7 @@
 class GameController : public QObject {
     Q_OBJECT
  public:
-    GameController(QGraphicsView *view, QObject *parent = nullptr);
+    GameController(QObject *parent, QGraphicsView *view, QJsonObject &cfg);
 
     void startNewGame();
     void togglePause(bool paused);
@@ -42,6 +44,8 @@ class GameController : public QObject {
     void gameLoop();
 
  private:
+    QJsonObject &cfg_;
+    ICore *icore_;
     QGraphicsView *gameView_;
     SceneGeneric *gameScene_;
     QTimer tmr_;

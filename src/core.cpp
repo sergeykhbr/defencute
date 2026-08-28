@@ -17,9 +17,11 @@
 
 #include "core.h"
 #include <QMetaType>
+#include <QJsonParseError>
 #include <QDebug>
 #include "SceneGeneric.h"
 #include "tower.h"
+#include "MainWindow.h"
 
 static Core *core_ = nullptr;
 
@@ -39,6 +41,71 @@ void Core::configurate(QString filename) {
     qRegisterMetaType<SceneGeneric *>("SceneGeneric");
     qRegisterMetaType<ArrowTower *>("ArrowTower");
     qRegisterMetaType<RifleTower *>("RifleTower");
+
+    QString json =
+    "{\n"
+    "  'controller':{\n"
+    "           'Level':'SceneGeneric',\n"
+    "           'TickMs':16\n"
+    "           },\n"
+    "  'HexMenu':{\n"
+    "           'BtnRadius':24,\n"
+    "           'BtnMax':6,\n"
+    "           'BtnTowers':['ArrowTower',\n"
+    "                        '',\n"
+    "                        'RifleTower',\n"
+    "                        '',\n"
+    "                        '',\n"
+    "                        ''\n"
+    "                        ]\n"
+    "           },\n"
+    "  'scene':'current scene run time generated',\n"
+    "  'towers':{\n"
+    "           'ArrowTower':{\n"
+    "                        'sprite':':/images/archer_tower.png',\n"
+    "                        'iconFile':':/images/build_icons_64x8.png',\n"
+    "                        'iconx':0,\n"
+    "                        'price':50\n"
+    "                        },\n"
+    "           'RifleTower':{\n"
+    "                        'sprite':':/images/rifle_tower.png',\n"
+    "                        'iconFile':':/images/build_icons_64x8.png',\n"
+    "                        'iconx':64,\n"
+    "                        'price':60\n"
+    "                        }\n"
+    "           },\n"
+    "  'ZDepth':{\n"
+    "           'HexTile':-10,\n"
+    "           'HexMenu':2000\n"
+    "           }\n"
+    "}\n";
+
+    cfg_ = toJsonObject(json);
+
+    MainWindow *window = new MainWindow(cfg_);
+    window->setWindowTitle("Defencute demo");
+    window->show();
+    /*
+    */
+}
+
+QJsonObject Core::toJsonObject(QString str)  {
+    str.replace('\'', '\"');
+
+    QByteArray rawJson = str.toUtf8();
+    QJsonParseError parseError;
+    QJsonDocument doc = QJsonDocument::fromJson(rawJson, &parseError);
+    if (parseError.error != QJsonParseError::NoError) {
+        qWarning() << "JSON Parsing Error:" << parseError.errorString() 
+                   << "at character offset:" << parseError.offset;
+        return QJsonObject(); // Return an empty object
+    }
+    if (!doc.isObject()) {
+        qWarning() << "JSON Error: Root element is a list [] or primitive, not an object.";
+        return QJsonObject();
+    }
+
+    return doc.object();
 }
 
 void Core::registerCoreObject(QString objname,

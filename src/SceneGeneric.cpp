@@ -28,12 +28,14 @@ SceneGeneric::SceneGeneric(QObject *parent,
                             QJsonObject &config)
     : QGraphicsScene(parent),
     ICoreObject(objname),
+    cfg_(config),
     hextileSelected_(nullptr),
     goldCnt_(100),
     livesCnt_(20),
     wavesCnt_(20)
 {
     registerInterface(static_cast<IScene *>(this));
+    cfg_["scene"] = getObjName();
 
     currentHoveredHex_ = nullptr;
     setSceneRect(0, 0, 800, 600);
@@ -69,9 +71,7 @@ SceneGeneric::SceneGeneric(QObject *parent,
             addItem(new HexTile(center, isPath));
         }
     }
-    QJsonObject hexcfg;
-    hexcfg["scene"] = getObjName();
-    hexmenu_ = new HexMenu(hexcfg);
+    hexmenu_ = new HexMenu(cfg_);
     addItem(hexmenu_);
 
     // Information panel: health, wave number:
@@ -160,12 +160,16 @@ void SceneGeneric::closeActiveMenu() {
     hexmenu_->setVisible(false);
 }
 
-void SceneGeneric::buildTower(QJsonObject &twrcfg) {
+void SceneGeneric::buildTower(QString &towername) {
     ICore *core = getpCoreInterface();
+    QJsonValue towers = cfg_["towers"];
+    // create copy of tower config for a new building plus position:
+    QJsonObject twrcfg = towers.toObject()[towername].toObject();
+    twrcfg["scene"] = cfg_["scene"];
     twrcfg["posx"] = hextileSelected_->getCenter().x();
     twrcfg["posy"] = hextileSelected_->getCenter().y();
     TowerGeneric *newTower = dynamic_cast<TowerGeneric *>(
-        core->createQtClassObject(this, twrcfg["ClassName"].toString(), twrcfg));
+        core->createQtClassObject(this, towername, twrcfg));
 
     if (newTower) {
         addItem(newTower);

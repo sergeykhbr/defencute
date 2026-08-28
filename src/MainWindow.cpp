@@ -22,7 +22,7 @@
 #include <QKeyEvent>
 #include "GameView.h"
 
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), m_isPaused(false) {
+MainWindow::MainWindow(QJsonObject &cfg) : QMainWindow(nullptr), m_isPaused(false) {
     // 1. Create the master layout container
     QWidget *centralWidget = new QWidget(this);
     m_stackedLayout = new QStackedLayout(centralWidget);
@@ -62,7 +62,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), m_isPaused(false)
     // ==========================================
     // CONTROLLER CONFIGURATION & SIGNALS
     // ==========================================
-    m_controller = new GameController(view, this);
+    m_controller = new GameController(this, view, cfg);
 
     // Wire up Menu Buttons actions
     connect(resumeBtn, &QPushButton::clicked, this, [this]() {

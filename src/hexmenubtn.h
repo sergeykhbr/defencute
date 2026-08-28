@@ -29,23 +29,29 @@ class HexMenuButton : public QGraphicsObject {
     Q_OBJECT
  public:
     HexMenuButton(QGraphicsObject* parent,
-                  QJsonObject &cfg);
+                  QJsonObject &cfg,
+                  qreal radius);
 
-    QRectF boundingRect() const override;
+    // Common methods
+    void selectTower(QString towerName);
 
-    void paint(QPainter* painter,
+    // GraphicsObject mandatory:
+    virtual QRectF boundingRect() const override;
+
+    virtual void paint(QPainter* painter,
                const QStyleOptionGraphicsItem*,
                QWidget*) override;
 
  signals:
-    void signalPressed(QJsonObject &twrcfg);
+    void signalPressed(QString &towerName);
 
  protected:
     void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
     void hoverEnterEvent(QGraphicsSceneHoverEvent* event) override;
     void hoverLeaveEvent(QGraphicsSceneHoverEvent* event) override;
  private:
-    QJsonObject twrcfg_;
+    QJsonObject &cfg_;
+    QString selectedTower_;
     qreal radius_;
     int price_;
     bool isHovered_;
