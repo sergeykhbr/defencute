@@ -19,10 +19,6 @@
 #include <QJsonArray>
 #include "hexmenu.h"
 
-static const qreal ORBIT_DISTANCE = 54.0; 
-static const qreal BTN_RADIUS = 24.0;
-
-
 HexMenu::HexMenu(QJsonObject &cfg) : QGraphicsObject(), cfg_(cfg)
 {
     ICore * icore = getpCoreInterface();
@@ -33,6 +29,13 @@ HexMenu::HexMenu(QJsonObject &cfg) : QGraphicsObject(), cfg_(cfg)
     QJsonArray btnTowers = hexmenu["BtnTowers"].toArray();
     QJsonObject towers = cfg["towers"].toObject();
 
+    btnRadius_ = hexmenu["BtnRadius"].toDouble();
+    btnOrbit_ = hexmenu["BtnOrbit"].toDouble();
+    // Surrounding bounding diameter box
+    boundRect_ = QRectF(-(btnRadius_ + btnOrbit_),
+                        -(btnRadius_ + btnOrbit_),
+                        2*(btnRadius_ + btnOrbit_),
+                        2*(btnRadius_ + btnOrbit_));
     btnMax_ = hexmenu["BtnMax"].toInt();
     Btn_ = new HexMenuButton* [btnMax_];
 
@@ -42,9 +45,9 @@ HexMenu::HexMenu(QJsonObject &cfg) : QGraphicsObject(), cfg_(cfg)
             Btn_[i] = nullptr;
             continue;
         }
-        Btn_[i] = new HexMenuButton(this, cfg_, BTN_RADIUS);
-        Btn_[i]->setPos(ORBIT_DISTANCE * sin(i * M_PI/3), 
-                        ORBIT_DISTANCE * cos(i * M_PI/3));
+        Btn_[i] = new HexMenuButton(this, cfg_, btnRadius_);
+        Btn_[i]->setPos(btnOrbit_ * sin(i * M_PI/3), 
+                        btnOrbit_ * cos(i * M_PI/3));
         Btn_[i]->selectTower(twrName);
         connect(Btn_[i], &HexMenuButton::signalPressed,
                 this, &HexMenu::slotButtonClicked);
@@ -61,7 +64,7 @@ HexMenu::~HexMenu() {
 }
 
 QRectF HexMenu::boundingRect() const {
-    return QRectF(-70, -70, 140, 140); // Surrounding bounding diameter box
+    return boundRect_; 
 }
 
 void HexMenu::paint(QPainter* painter,
@@ -71,10 +74,10 @@ void HexMenu::paint(QPainter* painter,
     painter->setRenderHint(QPainter::Antialiasing);
     painter->setPen(QPen(QColor(255, 255, 255, 60), 1, Qt::DashLine));
     painter->setBrush(QColor(0, 0, 0, 20)); // Soft dark circle backdrop
-    painter->drawEllipse(QRectF(-ORBIT_DISTANCE,
-                                -ORBIT_DISTANCE,
-                                2*ORBIT_DISTANCE,
-                                2*ORBIT_DISTANCE));
+    painter->drawEllipse(QRectF(-btnOrbit_,
+                                -btnOrbit_,
+                                2*btnOrbit_,
+                                2*btnOrbit_));
 }
 
 void HexMenu::slotButtonClicked(QString &towername) {

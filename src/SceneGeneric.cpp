@@ -18,6 +18,7 @@
 #include <ICore.h>
 #include "SceneGeneric.h"
 #include <algorithm>
+#include <QJsonArray>
 
 const qreal HEX_HEIGHT = std::sqrt(3) * HEX_RADIUS_Y;
 const qreal HORIZ_SPACING = 1.5 * HEX_RADIUS_X;
@@ -54,6 +55,19 @@ SceneGeneric::SceneGeneric(QObject *parent,
     }
 
     // Draw the background grid and high-light the path tiles
+    QJsonArray routes = cfg_.value("Routes").toArray();
+    for (auto route : routes) {
+        QJsonObject routeObj = route.toObject();
+        int startx = routeObj["StartX"].toInt();
+        int starty = routeObj["StartY"].toInt();
+        QJsonArray routeSteps = routeObj.value("Steps").toArray();
+        for (auto step : routeSteps) {
+            QJsonObject stepObj = step.toObject();
+            int dx = stepObj["x"].toInt();
+            int dy = stepObj["y"].toInt();
+            int N = stepObj["N"].toInt();
+        }
+    }
 
     for (int col = 0; col < hexHNum_; ++col) {
         for (int row = 0; row < hexVNum_; ++row) {
@@ -96,6 +110,10 @@ SceneGeneric::SceneGeneric(QObject *parent,
     enemy = new Enemy(visualPathPixelPoints, QPointF(0, -10));
     addItem(enemy);
     enemies_.push_back(enemy);
+
+    emit signalUpdateGold(goldCnt_);
+    emit signalUpdateLives(livesCnt_);
+    emit signalUpdateWave(wavesCnt_);
 }
 
 void SceneGeneric::resetCurrentHighlight() {
@@ -156,6 +174,14 @@ void SceneGeneric::mousePressEvent(QGraphicsSceneMouseEvent* event) {
     }
 }
 
+QList<Waypoint> *SceneGeneric::getpRoute(QString name) {
+    auto it = routes_.find(name);
+    if (it == routes_.end()) {
+        return nullptr;
+    }
+    return &(*it);
+}
+
 void SceneGeneric::closeActiveMenu() {
     hexmenu_->setVisible(false);
 }
@@ -175,6 +201,9 @@ void SceneGeneric::buildTower(QString &towername) {
         addItem(newTower);
         towers_.append(newTower);
         hextileSelected_->attachTower(newTower);
+
+        goldCnt_ -= twrcfg["price"].toInt();
+        emit signalUpdateGold(goldCnt_);
     }
 }
 

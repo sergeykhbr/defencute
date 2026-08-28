@@ -20,6 +20,7 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QPointF>
 #include <QList>
+#include <QHash>
 #include <QBrush>
 #include <QJsonObject>
 #include "tower.h"
@@ -31,11 +32,6 @@
 #include <ICoreClass.h>
 #include <ICoreObject.h>
 #include <IScene.h>
-
-struct Waypoint {
-    int col;
-    int row;
-};
 
 class SceneGeneric : public QGraphicsScene,
                      public ICoreObject,
@@ -52,6 +48,7 @@ class SceneGeneric : public QGraphicsScene,
     }
     virtual void buildTower(QString &towername) override;
     virtual void addProjectile(Projectile *p) override;
+    virtual QList<Waypoint> *getpRoute(QString name) override;
 
 
     virtual void gameLoop();
@@ -79,6 +76,7 @@ class SceneGeneric : public QGraphicsScene,
     QList<TowerGeneric *> towers_;
     QList<Projectile *> projectiles_;
     QList<QPointF> visualPathPixelPoints;
+    QHash<QString, QList<Waypoint>> routes_;
     HexMenu *hexmenu_;
     int hexHNum_;       // total HEX per row
     int hexVNum_;       // total HEX per col

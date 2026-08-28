@@ -39,5 +39,8 @@ class HexMenu : public QGraphicsObject {
     QJsonObject &cfg_;
     IScene *iscene_;
     int btnMax_;
+    qreal btnRadius_;
+    qreal btnOrbit_;
     HexMenuButton** Btn_;
+    QRectF boundRect_;
 };

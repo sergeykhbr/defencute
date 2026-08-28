@@ -19,10 +19,13 @@
 #include <ICore.h>
 #include <QList>
 #include <QHash>
+#include "MainWindow.h"
+
 
 class Core : public ICore {
  public:
     Core();
+    virtual ~Core();
 
     virtual void configurate(QString filename) override;
 
@@ -46,4 +49,5 @@ class Core : public ICore {
     QJsonObject cfg_;
     QHash<QString, Interface *> objList_;
     int uniqueIdx_;
+    MainWindow *mainWindow_;
 };

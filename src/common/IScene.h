@@ -18,6 +18,15 @@
 
 #include "IFace.h"
 #include "projectile.h"
+#include <QList>
+
+struct Waypoint {
+    int col;
+    int row;
+    int dx;
+    int dy;
+    int N;
+};
 
 class IScene : public Interface {
  public:
@@ -26,6 +35,7 @@ class IScene : public Interface {
     virtual bool isGoldAvailable(int gold) = 0;
     virtual void buildTower(QString &towername) = 0;
     virtual void addProjectile(Projectile *p) = 0;
+    virtual QList<Waypoint> *getpRoute(QString name) = 0;
 };
 
 

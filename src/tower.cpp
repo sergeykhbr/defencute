@@ -38,13 +38,15 @@ TowerGeneric::TowerGeneric(QObject *parent,
     qreal posx = cfg["posx"].toDouble();
     qreal posy = cfg["posy"].toDouble();
     hexCenter_ = QPointF(posx, posy);
-    setZValue(posy);
+    spriteShiftY_ = 24 - 2;
+
     attackCooldown_ = 0;
     rangeIndicator_ = 0;
 
     spriteSheet_.load(cfg["sprite"].toString());
     singleFrame_ = spriteSheet_.copy(0, 0, 64, 64);
     setPos(posx, posy);
+    setZValue(posy);
 }
 
 QVariant TowerGeneric::itemChange(GraphicsItemChange change, const QVariant &value) {
@@ -76,10 +78,9 @@ QRectF TowerGeneric::boundingRect() const {
     
     // This defines a bounding box where (0,0) sits at the bottom-center of your image
     qreal topLeftX = -(w / 2.0);
-    qreal topLeftY = -h;
+    qreal topLeftY = -h + spriteShiftY_;
     
-    // Pad the bottom slightly (+30.0) so your custom green selection ring isn't clipped
-    return QRectF(topLeftX, topLeftY, w, h + 30.0);
+    return QRectF(topLeftX, topLeftY, w, h);
 }
 
 void TowerGeneric::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
@@ -87,9 +88,8 @@ void TowerGeneric::paint(QPainter *painter, const QStyleOptionGraphicsItem *opti
     customOption.state &= ~QStyle::State_Selected;
 
     painter->setRenderHint(QPainter::SmoothPixmapTransform);
-    int spriteShiftY = 24 - 2;
     qreal topLeftX = -(singleFrame_.width() / 2.0);
-    qreal topLeftY = -singleFrame_.height() + spriteShiftY;
+    qreal topLeftY = -singleFrame_.height() + spriteShiftY_;
     painter->drawPixmap(topLeftX, topLeftY, singleFrame_);
 
     // Draw your custom Green Selection Circle if the tower is selected
@@ -108,6 +108,17 @@ void TowerGeneric::paint(QPainter *painter, const QStyleOptionGraphicsItem *opti
                                     2 * rx,
                                     2 * ry / 2.0));
     }
+
+#if 0
+    // Debug draw boundRect:
+    painter->save();
+    QPen debugPen(QColor(255, 0, 100, 220), 1.5, Qt::DashLine);
+    debugPen.setCosmetic(true); // THE SECRET: Prevents line scaling when zooming the view camera
+    painter->setPen(debugPen);
+    painter->setBrush(QColor(255, 0, 100, 20)); // Soft translucent red fill back drop highlight
+    painter->drawRect(this->boundingRect());
+    painter->restore();
+#endif
 }
 
 void TowerGeneric::updateCooldown() {

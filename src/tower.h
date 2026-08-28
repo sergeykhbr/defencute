@@ -71,6 +71,7 @@ class TowerGeneric : public QGraphicsObject,
     QPixmap spriteSheet_;
     QPixmap singleFrame_;
 
+    int spriteShiftY_;      // offset of sprite relative hex center
     int cooldownTime_;
     int attackCooldown_;
     int frameSpeed_;

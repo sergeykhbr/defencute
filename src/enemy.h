@@ -26,9 +26,10 @@
 #include <QPixmap>
 #include <cmath>
 
-class Enemy : public QGraphicsPixmapItem {
+class Enemy : public QGraphicsObject {
+    Q_OBJECT
  public:
-    Enemy(const QList<QPointF>& points, QPointF startOffset);
+    Q_INVOKABLE Enemy(const QList<QPointF>& points, QPointF startOffset);
 
     void resetPosition();
     void updateVisualFrame();
@@ -45,6 +46,7 @@ class Enemy : public QGraphicsPixmapItem {
 
  private:
     QPixmap spriteSheet_;
+    QPixmap singleFrame_;
     QList<QPointF> pathPoints;
     QPointF startOffset_;
     int currentWaypointIndex = 0;

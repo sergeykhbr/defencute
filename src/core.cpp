@@ -21,7 +21,7 @@
 #include <QDebug>
 #include "SceneGeneric.h"
 #include "tower.h"
-#include "MainWindow.h"
+#include "enemy.h"
 
 static Core *core_ = nullptr;
 
@@ -41,6 +41,7 @@ void Core::configurate(QString filename) {
     qRegisterMetaType<SceneGeneric *>("SceneGeneric");
     qRegisterMetaType<ArrowTower *>("ArrowTower");
     qRegisterMetaType<RifleTower *>("RifleTower");
+    qRegisterMetaType<Enemy *>("Enemy");    // remove me
 
     QString json =
     "{\n"
@@ -49,7 +50,8 @@ void Core::configurate(QString filename) {
     "           'TickMs':16\n"
     "           },\n"
     "  'HexMenu':{\n"
-    "           'BtnRadius':24,\n"
+    "           'BtnOrbit':54.0,\n"
+    "           'BtnRadius':24.0,\n"
     "           'BtnMax':6,\n"
     "           'BtnTowers':['ArrowTower',\n"
     "                        '',\n"
@@ -74,6 +76,20 @@ void Core::configurate(QString filename) {
     "                        'price':60\n"
     "                        }\n"
     "           },\n"
+    "  'Routes':[\n"
+    "               {\n"
+    "               'RouteName':'route1',\n"
+    "               'StartX':2,\n"
+    "               'StartY':8,\n"
+    "               'Steps':[\n"
+    "                        {'x':1, 'y':0, 'N':5},\n"
+    "                        {'x':0, 'y':1, 'N':3},\n"
+    "                        {'x':1, 'y':1, 'N':2},\n"
+    "                        {'x':1, 'y':0, 'N':5},\n"
+    "                        {'x':0, 'y':-1, 'N':2}\n"
+    "                       ]\n"
+    "               }\n"
+    "           ],\n"
     "  'ZDepth':{\n"
     "           'HexTile':-10,\n"
     "           'HexMenu':2000\n"
@@ -82,11 +98,13 @@ void Core::configurate(QString filename) {
 
     cfg_ = toJsonObject(json);
 
-    MainWindow *window = new MainWindow(cfg_);
-    window->setWindowTitle("Defencute demo");
-    window->show();
-    /*
-    */
+    mainWindow_ = new MainWindow(cfg_);
+    mainWindow_->setWindowTitle("Defencute demo");
+    mainWindow_->show();
+}
+
+Core::~Core() {
+    delete mainWindow_;
 }
 
 QJsonObject Core::toJsonObject(QString str)  {

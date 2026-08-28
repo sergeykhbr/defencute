@@ -23,19 +23,18 @@ const int FRAME_WIDTH = 96;  // Size of one frame box
 const int FRAME_HEIGHT = 64;
 const int ANIM_SPEED_TICKS = 8; // Change sprite frame every 8 game loop ticks (~60fps / 8)
 
-const qreal HEALTH_BAR_WIDTH = 30.0;
-const qreal HEALTH_BAR_HEIGHT = 4.0;
-const qreal HEALTH_BAR_OFFSET_Y = 10.0; // Distance above the enemy sprite boundary
+const int HEALTH_BAR_WIDTH = 30;
+const int HEALTH_BAR_HEIGHT = 4;
+const int HEALTH_BAR_OFFSET_Y = 2; // Distance above the enemy sprite boundary
 
-Enemy::Enemy(const QList<QPointF>& points, QPointF startOffset) : QGraphicsPixmapItem(),
+Enemy::Enemy(const QList<QPointF>& points, QPointF startOffset) : QGraphicsObject(),
     speed_(2),
     healthMax_(100),
     startOffset_(startOffset),
     traveledDistance_(0) {
     pathPoints = points;
     spriteSheet_.load(":/images/base_walk_strip8.png");
-
-    setOffset(-FRAME_WIDTH / 2, -FRAME_HEIGHT / 2);
+    singleFrame_ = spriteSheet_.copy(0, 0, FRAME_WIDTH, FRAME_HEIGHT);
 
     resetPosition();
 }
@@ -64,10 +63,7 @@ void Enemy::updateVisualFrame() {
     int srcY = directionRow_ * FRAME_HEIGHT;
 
     // Crop the single active frame out of the master image sheet
-    QPixmap singleFrame = spriteSheet_.copy(srcX, srcY, FRAME_WIDTH, FRAME_HEIGHT);
-        
-    // Push the cropped picture to Qt's rendering system
-    setPixmap(singleFrame);
+    singleFrame_ = spriteSheet_.copy(srcX, srcY, FRAME_WIDTH, FRAME_HEIGHT);
 }
 
 QVector2D Enemy::getFuturePos(int tick) {
@@ -152,7 +148,10 @@ void Enemy::takeDamage(int damage) {
 }
 
 void Enemy::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
-    QGraphicsPixmapItem::paint(painter, option, widget); 
+
+    int w = singleFrame_.width();
+    int h = singleFrame_.height();
+    painter->drawPixmap(-w/2, -h, singleFrame_);
 
     if (health_ <= 0) {
         return;
@@ -160,12 +159,10 @@ void Enemy::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWi
 
     qreal healthRatio = static_cast<qreal>(health_) / healthMax_;
 
-    // Use your base class pixmap size configurations to place the health bar perfectly
-    qreal spriteWidth = this->pixmap().width();
-    
+   
     // Center the bar over the texture width bounding space
-    qreal barX = (spriteWidth - HEALTH_BAR_WIDTH) / 2.0 - (spriteWidth / 2.0); 
-    qreal barY = -(this->pixmap().height() / 2.0) - HEALTH_BAR_OFFSET_Y - HEALTH_BAR_HEIGHT;
+    int barX = -HEALTH_BAR_WIDTH / 2; 
+    int barY = -(h + HEALTH_BAR_OFFSET_Y + HEALTH_BAR_HEIGHT);
 
     // Background Layer (Red Container Fill)
     painter->setPen(Qt::NoPen);
@@ -180,15 +177,27 @@ void Enemy::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWi
     painter->setPen(QPen(Qt::black, 1));
     painter->setBrush(Qt::NoBrush);
     painter->drawRect(QRectF(barX, barY, HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT));
+
+#if 0
+    // Debug draw boundRect:
+    painter->save();
+    QPen debugPen(QColor(255, 0, 100, 220), 1.5, Qt::DashLine);
+    debugPen.setCosmetic(true); // THE SECRET: Prevents line scaling when zooming the view camera
+    painter->setPen(debugPen);
+    painter->setBrush(QColor(255, 0, 100, 20)); // Soft translucent red fill back drop highlight
+    painter->drawRect(this->boundingRect());
+    painter->restore();
+#endif
 }
 
 // Ensure the item bounding space allocation covers the extra vertical height of the bar
 QRectF Enemy::boundingRect() const {
-    // 1. Get the standard base image bounding rectangle
-    QRectF baseRect = QGraphicsPixmapItem::boundingRect();
-    
-    // 2. Expand the top boundary upward to fit the health bar safely
-    // adjusting the top coordinate y by adding negative padding space
-    baseRect.setTop(baseRect.top() - HEALTH_BAR_OFFSET_Y - HEALTH_BAR_HEIGHT - 5);
-    
-    return baseRect;}
+    // Get the standard base image bounding rectangle
+    int w = singleFrame_.width();
+    int h = singleFrame_.height();
+    int top = HEALTH_BAR_OFFSET_Y + HEALTH_BAR_HEIGHT + 5;
+    QRectF baseRect(-w/2, -h, w, h);
+    // increase top border:
+    baseRect.setTop(baseRect.top() - top);
+    return baseRect;
+}
