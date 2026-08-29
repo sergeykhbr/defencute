@@ -16,41 +16,28 @@
 
 #pragma once
 
-#include <QGraphicsItem>
+#include <QObject>
+#include <QGraphicsObject>
+#include <QJsonObject>
 #include <QPainter>
 #include "towermenubtn.h"
 
-class TowerMenu : public QGraphicsItem {
-public:
-    explicit TowerMenu(QGraphicsItem* parent = nullptr) : QGraphicsItem(parent) {
-        // Orbit button positioning distance out from the tower center point
-        qreal orbitDistance = 45.0; 
-        qreal buttonRadius = 14.0;
+class TowerMenu : public QGraphicsObject {
+    Q_OBJECT
+ public:
+    TowerMenu(QGraphicsObject *parent, QJsonObject &cfg);
 
-        // Position Upgrade button to the Left, Sell button to the Right
-        upgradeBtn_ = new TowerMenuButton(TowerMenuButton::Upgrade, buttonRadius, this);
-        upgradeBtn_->setPos(-orbitDistance, 0);
+    virtual QRectF boundingRect() const override;
+    virtual void paint(QPainter* painter,
+                       const QStyleOptionGraphicsItem *,
+                       QWidget *) override;
+ signals:
+    void signalMenuRequest(QString &action);
 
-        sellBtn_ = new TowerMenuButton(TowerMenuButton::Sell, buttonRadius, this);
-        sellBtn_->setPos(orbitDistance, 0);
+ protected slots:
+    void slotBtnPressed(QString &action);
 
-        setZValue(2000); // Always stay stacked on top of towers and projectiles
-        setVisible(false); // Hidden until selected
-    }
-
-    QRectF boundingRect() const override {
-        return QRectF(-70, -70, 140, 140); // Surrounding bounding diameter box
-    }
-
-    void paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget*) override {
-        // Draw a light translucent radial ring guideline showing interaction tracks
-        painter->setRenderHint(QPainter::Antialiasing);
-        painter->setPen(QPen(QColor(255, 255, 255, 60), 1, Qt::DashLine));
-        painter->setBrush(QColor(0, 0, 0, 20)); // Soft dark circle backdrop
-        painter->drawEllipse(QRectF(-45, -45, 90, 90));
-    }
-
-private:
+ private:
     TowerMenuButton* upgradeBtn_;
     TowerMenuButton* sellBtn_;
 };

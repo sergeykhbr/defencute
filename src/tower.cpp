@@ -25,7 +25,7 @@ TowerGeneric::TowerGeneric(QObject *parent,
                  QJsonObject &cfg) :
     QGraphicsObject(),
     ICoreObject(objname),
-    menu_(this)
+    menu_(nullptr)
 {
     registerInterface(static_cast<ITower *>(this));
 
@@ -40,8 +40,16 @@ TowerGeneric::TowerGeneric(QObject *parent,
     hexCenter_ = QPointF(posx, posy);
     spriteShiftY_ = 24 - 2;
 
+    menucfg_["TowerName"] = objname;
+    menucfg_["MenuZDepth"] = cfg["MenuZDepth"].toInt();
+    menu_ = new TowerMenu(this, menucfg_);
+    connect(menu_, &TowerMenu::signalMenuRequest,
+            this, &TowerGeneric::slotMenuRequest);
+
     attackCooldown_ = 0;
     rangeIndicator_ = 0;
+    markToSell_ = false;
+    price_ = cfg["price"].toInt();
 
     spriteSheet_.load(cfg["sprite"].toString());
     singleFrame_ = spriteSheet_.copy(0, 0, 64, 64);
@@ -66,7 +74,7 @@ QVariant TowerGeneric::itemChange(GraphicsItemChange change, const QVariant &val
         // Automatically toggle visibility based on selection state
         bool selected = value.toBool();
         rangeIndicator_->setVisible(selected);
-        menu_.setVisible(selected);
+        menu_->setVisible(selected);
         update();
     }
     return QGraphicsObject::itemChange(change, value);
@@ -166,6 +174,13 @@ void TowerGeneric::updateTarget(IEnemy* ienemy) {
     Projectile *p = createProjectile(hexCenter_, targetPoint, ienemy);
     iscene_->addProjectile(p);
     attackCooldown_ = cooldownTime_;
+}
+
+void TowerGeneric::slotMenuRequest(QString &action) {
+    qDebug() << getObjName() << action;
+    if (action == "Sell") {
+        markToSell_ = true;
+    }
 }
 
 //////////////////

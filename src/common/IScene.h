@@ -34,7 +34,6 @@ class IScene : public Interface {
 
     virtual bool isGoldAvailable(int gold) = 0;
     virtual void buildTower(QString &towerclass) = 0;
-    virtual void destroyTower(QString &towername) = 0;
     virtual void addProjectile(Projectile *p) = 0;
     virtual QList<Waypoint> *getpRoute(QString name) = 0;
     virtual QPointF getHexCenter(int x, int y) = 0;

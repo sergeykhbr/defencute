@@ -16,65 +16,35 @@
 
 #pragma once
 
+#include <QObject>
+#include <QGraphicsObject>
+#include <QJsonObject>
 #include <QGraphicsSceneMouseEvent>
-#include <QGraphicsItem>
 #include <QPainter>
 #include <QCursor>
 
-class TowerMenuButton : public QGraphicsItem {
-public:
-    enum ButtonType { Upgrade, Sell };
+class TowerMenuButton : public QGraphicsObject {
+    Q_OBJECT
+ public:
+    TowerMenuButton(QGraphicsObject *parent,
+                    QJsonObject &cfg);
 
-    TowerMenuButton(ButtonType type, qreal radius, QGraphicsItem* parent = nullptr)
-        : QGraphicsItem(parent), type_(type), radius_(radius), isHovered_(false) 
-    {
-        setAcceptHoverEvents(true);
-    }
+    virtual QRectF boundingRect() const override;
+    virtual void paint(QPainter *painter,
+                       const QStyleOptionGraphicsItem *,
+                       QWidget *) override;
 
-    QRectF boundingRect() const override {
-        return QRectF(-radius_, -radius_, radius_ * 2, radius_ * 2);
-    }
+ signals:
+    void signalPressed(QString &action);
 
-    void paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget*) override {
-        // Change color dynamically on mouse hover
-        QColor circleColor = isHovered_ ? QColor(40, 180, 40) : QColor(30, 140, 30); // Green for Upgrade
-        if (type_ == Sell) {
-            circleColor = isHovered_ ? QColor(220, 60, 60) : QColor(180, 40, 40);   // Red for Sell
-        }
+ protected:
+    virtual void hoverEnterEvent(QGraphicsSceneHoverEvent*) override;
+    virtual void hoverLeaveEvent(QGraphicsSceneHoverEvent*) override;
+    virtual void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
 
-        painter->setRenderHint(QPainter::Antialiasing);
-        painter->setPen(QPen(Qt::white, 2));
-        painter->setBrush(circleColor);
-        painter->drawEllipse(boundingRect());
-
-        // Draw simple inner action icons (Up Arrow or Dollar Sign)
-        painter->setPen(QPen(Qt::white, 2, Qt::SolidLine, Qt::RoundCap));
-        if (type_ == Upgrade) {
-            painter->drawLine(0, -6, -5, 0);
-            painter->drawLine(0, -6, 5, 0);
-            painter->drawLine(0, -6, 0, 6);
-        } else {
-            painter->setFont(QFont("Arial", 10, QFont::Bold));
-            painter->drawText(boundingRect(), Qt::AlignCenter, "$");
-        }
-    }
-
-protected:
-    void hoverEnterEvent(QGraphicsSceneHoverEvent*) override { isHovered_ = true; update(); }
-    void hoverLeaveEvent(QGraphicsSceneHoverEvent*) override { isHovered_ = false; update(); }
-    
-    void mousePressEvent(QGraphicsSceneMouseEvent* event) override {
-        // Emit custom commands to parent structure
-        if (type_ == Upgrade) {
-            qDebug() << "Upgrade clicked!";
-        } else {
-            qDebug() << "Sell clicked!";
-        }
-        event->accept(); // Block event from dropping to map behind
-    }
-
-private:
-    ButtonType type_;
+ private:
+    QJsonObject &cfg_;
     qreal radius_;
+    QString action_;
     bool isHovered_;
 };

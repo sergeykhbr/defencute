@@ -15,3 +15,59 @@
  */
 
 #include "towermenubtn.h"
+
+TowerMenuButton::TowerMenuButton(QGraphicsObject *parent,
+                                 QJsonObject &cfg)
+    : QGraphicsObject(parent),
+    cfg_(cfg),
+    isHovered_(false) 
+{
+    radius_ = cfg["radius"].toDouble();
+    action_ = cfg["action"].toString();
+    setAcceptHoverEvents(true);
+}
+
+QRectF TowerMenuButton::boundingRect() const {
+    return QRectF(-radius_, -radius_, radius_ * 2, radius_ * 2);
+}
+
+void TowerMenuButton::paint(QPainter *painter,
+                            const QStyleOptionGraphicsItem *,
+                            QWidget *) {
+    // Change color dynamically on mouse hover
+    QColor circleColor = isHovered_ ? QColor(40, 180, 40) : QColor(30, 140, 30); // Green for Upgrade
+    if (action_ == "Sell") {
+        circleColor = isHovered_ ? QColor(220, 60, 60) : QColor(180, 40, 40);   // Red for Sell
+    }
+
+    painter->setRenderHint(QPainter::Antialiasing);
+    painter->setPen(QPen(Qt::white, 2));
+    painter->setBrush(circleColor);
+    painter->drawEllipse(boundingRect());
+
+    // Draw simple inner action icons (Up Arrow or Dollar Sign)
+    painter->setPen(QPen(Qt::white, 2, Qt::SolidLine, Qt::RoundCap));
+    if (action_ == "Upgrade") {
+        painter->drawLine(0, -6, -5, 0);
+        painter->drawLine(0, -6, 5, 0);
+        painter->drawLine(0, -6, 0, 6);
+    } else {
+        painter->setFont(QFont("Arial", 10, QFont::Bold));
+        painter->drawText(boundingRect(), Qt::AlignCenter, "$");
+    }
+}
+
+void TowerMenuButton::hoverEnterEvent(QGraphicsSceneHoverEvent *) {
+    isHovered_ = true;
+    update();
+}
+
+void TowerMenuButton::hoverLeaveEvent(QGraphicsSceneHoverEvent *) {
+    isHovered_ = false;
+    update();
+}
+    
+void TowerMenuButton::mousePressEvent(QGraphicsSceneMouseEvent* event) {
+    emit signalPressed(action_);
+    event->accept(); // Block event from dropping to map behind
+}

@@ -39,8 +39,8 @@ class HexMenuButton : public QGraphicsObject {
     virtual QRectF boundingRect() const override;
 
     virtual void paint(QPainter* painter,
-               const QStyleOptionGraphicsItem*,
-               QWidget*) override;
+                       const QStyleOptionGraphicsItem*,
+                       QWidget*) override;
 
  signals:
     void signalPressed(QString &towerName);

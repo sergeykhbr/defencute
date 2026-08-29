@@ -103,7 +103,8 @@ void Core::configurate(QString filename) {
     "           ],\n"
     "  'ZDepth':{\n"
     "           'HexTile':-10,\n"
-    "           'HexMenu':2000\n"
+    "           'HexMenu':2000,\n"
+    "           'TowerMenu':2000\n"
     "           }\n"
     "}\n";
 

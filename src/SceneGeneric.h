@@ -45,7 +45,6 @@ class SceneGeneric : public QGraphicsScene,
     // IScene
     virtual bool isGoldAvailable(int gold) override { return goldCnt_ >= gold; }
     virtual void buildTower(QString &towerclass) override;
-    virtual void destroyTower(QString &towername) override;
     virtual void addProjectile(Projectile *p) override;
     virtual QList<Waypoint> *getpRoute(QString name) override;
     virtual QPointF getHexCenter(int x, int y) override;

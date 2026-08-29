@@ -42,13 +42,20 @@ class TowerGeneric : public QGraphicsObject,
                  QJsonObject &cfg);
 
     // ITower interface
+
+    // common methods
     virtual void updateCooldown();
+    virtual bool isToSell() { return markToSell_; }
     virtual bool isReadToAtack() { return attackCooldown_ <= 0; }
     virtual bool isInRange(QVector2D  enemy_pos);
     virtual void updateTarget(IEnemy* enemy);
     virtual int getFramesToTarget() { return frameSpeed_; }
     virtual qreal getRange() { return range_; }
     virtual int getDamage() { return damage_; }
+    virtual int getPrice() { return price_; }
+
+ protected slots:
+    void slotMenuRequest(QString &action);
 
  protected:
     // Intercept when selection status shifts dynamically
@@ -77,8 +84,11 @@ class TowerGeneric : public QGraphicsObject,
     int frameSpeed_;
     qreal range_;
     int damage_;
+    int price_;
     QGraphicsEllipseItem *rangeIndicator_;
-    TowerMenu menu_;
+    TowerMenu *menu_;
+    QJsonObject menucfg_;
+    bool markToSell_;
 };
 
 class ArrowTower : public TowerGeneric {

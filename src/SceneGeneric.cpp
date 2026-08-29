@@ -207,6 +207,7 @@ void SceneGeneric::buildTower(QString &towerclass) {
     twrcfg["scene"] = cfg_["scene"];
     twrcfg["posx"] = hextileSelected_->getCenter().x();
     twrcfg["posy"] = hextileSelected_->getCenter().y();
+    twrcfg["MenuZDepth"] = cfg_["ZDepth"].toObject()["TowerMenu"].toInt();
     TowerGeneric *newTower = dynamic_cast<TowerGeneric *>(
         core->createQtClassObject(this, towerclass, twrcfg));
 
@@ -215,12 +216,9 @@ void SceneGeneric::buildTower(QString &towerclass) {
         towers_.append(newTower);
         hextileSelected_->attachTower(newTower);
 
-        goldCnt_ -= twrcfg["price"].toInt();
+        goldCnt_ -= newTower->getPrice();
         emit signalUpdateGold(goldCnt_);
     }
-}
-
-void SceneGeneric::destroyTower(QString &towername) {
 }
 
 // Helper to turn grid columns/rows into exact screen pixel centers
@@ -271,8 +269,20 @@ void SceneGeneric::gameLoop() {
     sortEnemies();
 
     // Tower atack
-    for (TowerGeneric *tower : towers_) {
+    auto it = towers_.begin();
+    while (it != towers_.end()) {
+        TowerGeneric *tower = *it;
+        if (tower->isToSell()) {
+            it = towers_.erase(it);
+            removeItem(tower);
+            goldCnt_ += tower->getPrice();
+            delete tower;
+
+            emit signalUpdateGold(goldCnt_);
+            continue;
+        }
         tower->updateCooldown();
+        ++it;
     }
     for (TowerGeneric *tower : towers_) {
         if (!tower->isReadToAtack()) {

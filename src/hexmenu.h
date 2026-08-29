@@ -30,7 +30,9 @@ class HexMenu : public QGraphicsObject {
     virtual ~HexMenu();
 
     virtual QRectF boundingRect() const override;
-    virtual void paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget*) override;
+    virtual void paint(QPainter* painter,
+                       const QStyleOptionGraphicsItem *,
+                       QWidget *) override;
 
  protected slots:
     void slotButtonClicked(QString &towername);
