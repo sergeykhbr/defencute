@@ -22,7 +22,10 @@ class IEnemy : public Interface {
  public:
     IEnemy() : Interface("IEnemy") {}
 
-
+    virtual void takeDamage(int damage) = 0;
+    virtual QVector2D getFuturePos(int tick) = 0;
+    virtual int getHealth() = 0;
+    virtual int getReward() = 0;
 };
 
 

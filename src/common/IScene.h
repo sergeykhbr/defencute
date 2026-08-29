@@ -16,16 +16,16 @@
 
 #pragma once
 
-#include "IFace.h"
-#include "projectile.h"
+#include <IFace.h>
 #include <QList>
+#include <QPointF>
+#include <QVector2D>
+#include "../projectile.h"
 
 struct Waypoint {
-    int col;
-    int row;
-    int dx;
-    int dy;
-    int N;
+    int idx;
+    QVector2D pos;
+    QVector2D dist;
 };
 
 class IScene : public Interface {
@@ -33,9 +33,11 @@ class IScene : public Interface {
     IScene() : Interface("IScene") {}
 
     virtual bool isGoldAvailable(int gold) = 0;
-    virtual void buildTower(QString &towername) = 0;
+    virtual void buildTower(QString &towerclass) = 0;
+    virtual void destroyTower(QString &towername) = 0;
     virtual void addProjectile(Projectile *p) = 0;
     virtual QList<Waypoint> *getpRoute(QString name) = 0;
+    virtual QPointF getHexCenter(int x, int y) = 0;
 };
 
 

@@ -142,18 +142,18 @@ bool TowerGeneric::isInRange(QVector2D enemy_pos) {
     return false;
 }
 
-void TowerGeneric::updateTarget(Enemy* enemy) {
+void TowerGeneric::updateTarget(IEnemy* ienemy) {
     if (attackCooldown_ > 0) {
         return;
     }
 
-    if (!enemy || enemy->getHealth() <= 0) {
+    if (!ienemy || ienemy->getHealth() <= 0) {
         return;
     }
 
     // Calculate distance to enemy
     QVector2D towerPos(hexCenter_);
-    QVector2D enemyPos = enemy->getFuturePos(getFramesToTarget());
+    QVector2D enemyPos = ienemy->getFuturePos(getFramesToTarget());
 
     // Shoot if enemy is in range and cooldown is ready
     if (!isInRange(enemyPos)) {
@@ -163,7 +163,7 @@ void TowerGeneric::updateTarget(Enemy* enemy) {
     QPointF targetPoint(enemyPos.x(), enemyPos.y());
 
     // Create ballistic projectile and add to world container
-    Projectile *p = getpProjectile(hexCenter_, targetPoint, enemy);
+    Projectile *p = createProjectile(hexCenter_, targetPoint, ienemy);
     iscene_->addProjectile(p);
     attackCooldown_ = cooldownTime_;
 }
@@ -181,9 +181,9 @@ ArrowTower::ArrowTower(QObject *parent,
     damage_ = 25;
 }
 
-Projectile *ArrowTower::getpProjectile(QPointF &start,
-                                       QPointF &target,
-                                       Enemy* enemy) {
+Projectile *ArrowTower::createProjectile(QPointF &start,
+                                         QPointF &target,
+                                         IEnemy* enemy) {
     return new Arrow(start,
                      target,
                      enemy,
@@ -205,9 +205,9 @@ RifleTower::RifleTower(QObject *parent,
     damage_ = 30;
 }
 
-Projectile *RifleTower::getpProjectile(QPointF &start,
+Projectile *RifleTower::createProjectile(QPointF &start,
                                      QPointF &target,
-                                     Enemy* enemy) {
+                                     IEnemy* enemy) {
     return new Bullet(start,
                      target,
                      enemy,

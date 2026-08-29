@@ -44,16 +44,6 @@ SceneGeneric::SceneGeneric(QObject *parent,
     hexHNum_ = static_cast<int>(width() / HORIZ_SPACING) + 1;
     hexVNum_ = static_cast<int>(height() / HEX_HEIGHT) + 1;
 
-    // Define a winding road layout: (Col, Row)
-    QList<Waypoint> mapRoad = {
-        {0, 2}, {4, 2}, {4, 7}, {10, 7}, {10, 3}, {16, 3}, {16, 10}, {22, 10}
-    };
-
-    // Generate the structural path coordinates for our enemy to follow
-    for (const auto& wp : mapRoad) {
-        visualPathPixelPoints.append(getHexCenter(wp.col, wp.row));
-    }
-
     int ztile = cfg_["ZDepth"].toObject()["HexTile"].toInt();
     for (int col = 0; col < hexHNum_; ++col) {
         for (int row = 0; row < hexVNum_; ++row) {
@@ -66,23 +56,38 @@ SceneGeneric::SceneGeneric(QObject *parent,
     // high-light the path tiles
     QJsonArray routes = cfg_.value("Routes").toArray();
     for (auto route : routes) {
+        Waypoint wp0;
+        Waypoint wp1;
         QJsonObject routeObj = route.toObject();
+        QString rname = routeObj["RouteName"].toString();
         int x = routeObj["StartX"].toInt();
         int y = routeObj["StartY"].toInt();
+        int dx = 0;
+        int dy = 0;
+        int N = 0;
+        wp0.idx = 0;
+        wp0.pos = QVector2D(getHexCenter(x, y));
         getpTile(x, y)->setAsPath();
 
         QJsonArray routeSteps = routeObj.value("Steps").toArray();
         for (auto step : routeSteps) {
             QJsonObject stepObj = step.toObject();
-            int dx = stepObj["dx"].toInt();
-            int dy = stepObj["dy"].toInt();
-            int N = stepObj["N"].toInt();
+            N = stepObj["N"].toInt();
+            dx = stepObj["dx"].toInt();
+            dy = stepObj["dy"].toInt();
             for (int i = 0; i < N; i++) {
                 x += dx;
                 y += dy;
                 getpTile(x, y)->setAsPath();
             }
+            wp1.idx = wp0.idx + 1;
+            wp1.pos = QVector2D(getHexCenter(x, y));
+            wp1.dist = QVector2D(0, 0);
+            wp0.dist = wp1.pos - wp0.pos;
+            routes_[rname].append(wp0);
+            wp0 = wp1;
         }
+        routes_[rname].append(wp0);
     }
 
 
@@ -104,13 +109,10 @@ SceneGeneric::SceneGeneric(QObject *parent,
             infoPanel_, &InfoPanel::slotUpdateWave);
 
     // Spawn our path-following circle enemy
-    Enemy *enemy = new Enemy(visualPathPixelPoints, QPointF(0, 15));
-    addItem(enemy);
-    enemies_.push_back(enemy);
 
-    enemy = new Enemy(visualPathPixelPoints, QPointF(0, -10));
-    addItem(enemy);
-    enemies_.push_back(enemy);
+//    enemy = new Enemy(visualPathPixelPoints, QPointF(0, -10));
+//    addItem(enemy);
+//    enemies_.push_back(enemy);
 
     emit signalUpdateGold(goldCnt_);
     emit signalUpdateLives(livesCnt_);
@@ -197,16 +199,16 @@ void SceneGeneric::closeActiveMenu() {
     hexmenu_->setVisible(false);
 }
 
-void SceneGeneric::buildTower(QString &towername) {
+void SceneGeneric::buildTower(QString &towerclass) {
     ICore *core = getpCoreInterface();
     QJsonValue towers = cfg_["towers"];
     // create copy of tower config for a new building plus position:
-    QJsonObject twrcfg = towers.toObject()[towername].toObject();
+    QJsonObject twrcfg = towers.toObject()[towerclass].toObject();
     twrcfg["scene"] = cfg_["scene"];
     twrcfg["posx"] = hextileSelected_->getCenter().x();
     twrcfg["posy"] = hextileSelected_->getCenter().y();
     TowerGeneric *newTower = dynamic_cast<TowerGeneric *>(
-        core->createQtClassObject(this, towername, twrcfg));
+        core->createQtClassObject(this, towerclass, twrcfg));
 
     if (newTower) {
         addItem(newTower);
@@ -216,6 +218,9 @@ void SceneGeneric::buildTower(QString &towername) {
         goldCnt_ -= twrcfg["price"].toInt();
         emit signalUpdateGold(goldCnt_);
     }
+}
+
+void SceneGeneric::destroyTower(QString &towername) {
 }
 
 // Helper to turn grid columns/rows into exact screen pixel centers
@@ -247,6 +252,18 @@ void SceneGeneric::sortEnemies() {
 }
 
 void SceneGeneric::gameLoop() {
+    // Spawn new enemies:
+    if (enemies_.size() < 2) {
+        QJsonObject ecfg;
+        ecfg["Route"] = "route1";
+        ecfg["offx"] = -20 * enemies_.size();
+        ecfg["offy"] = 10 * enemies_.size();
+        ecfg["scene"] = getObjName();
+        Enemy *enemy = new Enemy(nullptr, "Enemy", ecfg);
+        addItem(enemy);
+        enemies_.push_back(enemy);
+    }
+
     // Enemy update positions
     for (Enemy *enemy : enemies_) {
         enemy->move();
@@ -281,14 +298,19 @@ void SceneGeneric::gameLoop() {
     // Cleanup dead enemy:
     for (int i = enemies_.size() - 1; i >= 0; --i) {
         Enemy *enemy = enemies_[i];          
-        if (enemy->hasReachedEnd() || enemy->getHealth() <= 0) {
-            enemy->resetPosition();
-        }
-#if 0
+#if 1
         if (enemy->hasReachedEnd()) {
+            if (enemy->getHealth() <= 0) {
+                goldCnt_ += enemy->getReward();
+                emit signalUpdateGold(goldCnt_);
+            }
             enemies_.removeAt(i);
             removeItem(enemy);
             delete enemy; // Reward player with gold here
+        }
+#else
+        if (enemy->hasReachedEnd() || enemy->getHealth() <= 0) {
+            enemy->resetPosition();
         }
 #endif
     }

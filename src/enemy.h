@@ -25,19 +25,30 @@
 #include <QList>
 #include <QPixmap>
 #include <cmath>
+#include <ICoreObject.h>
+#include <IScene.h>
+#include <IEnemy.h>
 
-class Enemy : public QGraphicsObject {
+class Enemy : public QGraphicsObject,
+              public ICoreObject,
+              public IEnemy {
     Q_OBJECT
  public:
-    Q_INVOKABLE Enemy(const QList<QPointF>& points, QPointF startOffset);
+    Q_INVOKABLE Enemy(QObject *parent,
+                      QString objname,
+                      QJsonObject &arg);
 
+    // IEnemy
+    virtual void takeDamage(int damage) override;
+    virtual QVector2D getFuturePos(int tick) override;
+    virtual int getHealth() override { return health_; }
+    virtual int getReward() override { return reward_; }
+
+    // Common methods
     void resetPosition();
     void updateVisualFrame();
-    QVector2D getFuturePos(int tick);
     void move();
     bool hasReachedEnd() const;
-    void takeDamage(int damage);
-    int getHealth() { return health_; }
     qreal getTraveledDistance() const { return traveledDistance_; }
 
  public:
@@ -45,17 +56,27 @@ class Enemy : public QGraphicsObject {
     virtual QRectF boundingRect() const override;
 
  private:
+    void distanceToTick(QVector2D dist, int &tickPerStep, QVector2D &inc);
+
+ private:
+    QJsonObject &cfg_;
     QPixmap spriteSheet_;
     QPixmap singleFrame_;
-    QList<QPointF> pathPoints;
+    QList<Waypoint> *route_;
+    QVector2D curpos_;
+    QVector2D tickDistance2D_;
     QPointF startOffset_;
-    int currentWaypointIndex = 0;
-    
+    int currentWaypointIndex_;
+    int tickPerStep_;
+
+    IScene *iscene_;
+
     qreal speed_;
     int currentFrameIndex_; // Cycles: 0, 1, 2
     int animationTimer_;    // Counts game ticks to slow down animation speed
     int directionRow_;      // 0 = Down, 1 = Left, 2 = Right, 3 = Up
     int health_;
     int healthMax_;
+    int reward_;
     qreal traveledDistance_;
 };

@@ -28,7 +28,7 @@
 #include <ICoreObject.h>
 #include <IScene.h>
 #include <ITower.h>
-#include "enemy.h"
+#include "IEnemy.h"
 #include "projectile.h"
 #include "towermenu.h"
 
@@ -45,7 +45,7 @@ class TowerGeneric : public QGraphicsObject,
     virtual void updateCooldown();
     virtual bool isReadToAtack() { return attackCooldown_ <= 0; }
     virtual bool isInRange(QVector2D  enemy_pos);
-    virtual void updateTarget(Enemy* enemy);
+    virtual void updateTarget(IEnemy* enemy);
     virtual int getFramesToTarget() { return frameSpeed_; }
     virtual qreal getRange() { return range_; }
     virtual int getDamage() { return damage_; }
@@ -61,9 +61,9 @@ class TowerGeneric : public QGraphicsObject,
 
     virtual QRectF boundingRect() const override;
 
-    virtual Projectile *getpProjectile(QPointF &start,
-                                       QPointF &target,
-                                       Enemy* enemy) = 0;
+    virtual Projectile *createProjectile(QPointF &start,
+                                         QPointF &target,
+                                         IEnemy* ienemy) = 0;
 
  protected:
     IScene *iscene_;
@@ -88,9 +88,9 @@ class ArrowTower : public TowerGeneric {
                             QString objname,
                             QJsonObject &cfg);
  protected:
-    virtual Projectile *getpProjectile(QPointF &start,
-                                       QPointF &target,
-                                       Enemy* enemy);
+    virtual Projectile *createProjectile(QPointF &start,
+                                         QPointF &target,
+                                         IEnemy* ienemy);
 };
 
 class RifleTower : public TowerGeneric {
@@ -100,9 +100,9 @@ class RifleTower : public TowerGeneric {
                            QString objname,
                            QJsonObject &cfg);
  protected:
-    virtual Projectile *getpProjectile(QPointF &start,
-                                       QPointF &target,
-                                       Enemy* enemy);
+    virtual Projectile *createProjectile(QPointF &start,
+                                         QPointF &target,
+                                         IEnemy* ienemy);
 };
 
 

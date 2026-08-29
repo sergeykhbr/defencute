@@ -15,10 +15,11 @@
  */
 
 #include "projectile.h"
+#include <QPainter>
 
 Projectile::Projectile(QPointF start,
                        QPointF target,
-                       Enemy* enemy,
+                       IEnemy* enemy,
                        qreal speed,
                        int damage) 
     : QGraphicsItem(),
@@ -55,7 +56,7 @@ void Projectile::advanceFrame() {
 // Ballistic arrow
 Arrow::Arrow(QPointF start,
             QPointF target,
-            Enemy* enemy,
+            IEnemy* enemy,
             qreal speed,
             int damage)
     : Projectile(start, target, enemy, speed, damage),
@@ -110,7 +111,7 @@ QRectF Arrow::boundingRect() const {
 // Bullet
 Bullet::Bullet(QPointF start,
             QPointF target,
-            Enemy* enemy,
+            IEnemy* enemy,
             qreal speed,
             int damage)
     : Projectile(start, target, enemy, speed, damage) {

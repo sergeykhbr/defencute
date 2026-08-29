@@ -43,13 +43,12 @@ class SceneGeneric : public QGraphicsScene,
                              QJsonObject &config);
 
     // IScene
-    virtual bool isGoldAvailable(int gold) override {
-        return goldCnt_ >= gold;
-    }
-    virtual void buildTower(QString &towername) override;
+    virtual bool isGoldAvailable(int gold) override { return goldCnt_ >= gold; }
+    virtual void buildTower(QString &towerclass) override;
+    virtual void destroyTower(QString &towername) override;
     virtual void addProjectile(Projectile *p) override;
     virtual QList<Waypoint> *getpRoute(QString name) override;
-
+    virtual QPointF getHexCenter(int x, int y) override;
 
     virtual void gameLoop();
 
@@ -67,7 +66,6 @@ class SceneGeneric : public QGraphicsScene,
     void setpTile(HexTile *tile, int x, int y);
     HexTile *getpTile(int x, int y);
     void resetCurrentHighlight();
-    QPointF getHexCenter(int col, int row);
     void sortEnemies();
     void closeActiveMenu();
 
@@ -78,7 +76,7 @@ class SceneGeneric : public QGraphicsScene,
     QList<TowerGeneric *> towers_;
     QList<Projectile *> projectiles_;
     QHash<int, HexTile *> tiles_;
-    QList<QPointF> visualPathPixelPoints;
+    //QList<QPointF> visualPathPixelPoints;
     QHash<QString, QList<Waypoint>> routes_;
     HexMenu *hexmenu_;
     int hexHNum_;       // total HEX per row

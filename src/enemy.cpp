@@ -27,12 +27,26 @@ const int HEALTH_BAR_WIDTH = 30;
 const int HEALTH_BAR_HEIGHT = 4;
 const int HEALTH_BAR_OFFSET_Y = 2; // Distance above the enemy sprite boundary
 
-Enemy::Enemy(const QList<QPointF>& points, QPointF startOffset) : QGraphicsObject(),
+Enemy::Enemy(QObject *parent,
+             QString objname,
+             QJsonObject &cfg)
+    : QGraphicsObject(),
+    ICoreObject(objname),
+    cfg_(cfg),
     speed_(2),
     healthMax_(100),
-    startOffset_(startOffset),
-    traveledDistance_(0) {
-    pathPoints = points;
+    reward_(10),
+    traveledDistance_(0)
+{
+    registerInterface(static_cast<IEnemy *>(this));
+
+    ICore * icore = getpCoreInterface();
+    QString scenename = cfg["scene"].toString();
+    iscene_ = dynamic_cast<IScene *>(icore->getpObjInterface(scenename, "IScene"));
+
+    route_ = iscene_->getpRoute(cfg["Route"].toString());
+    startOffset_ = QPointF(cfg["offx"].toInt(),
+                           cfg["offy"].toInt());
     spriteSheet_.load(":/images/base_walk_strip8.png");
     singleFrame_ = spriteSheet_.copy(0, 0, FRAME_WIDTH, FRAME_HEIGHT);
 
@@ -40,18 +54,39 @@ Enemy::Enemy(const QList<QPointF>& points, QPointF startOffset) : QGraphicsObjec
 }
 
 void Enemy::resetPosition() {
-    currentWaypointIndex = 0;
+    currentWaypointIndex_ = 0;
     health_ = healthMax_;
     currentFrameIndex_ = 0;
     animationTimer_ = 0;
     directionRow_ = 0;
     traveledDistance_ = 0;
+    Waypoint wp0 = route_->at(currentWaypointIndex_);
+    curpos_ = wp0.pos + QVector2D(startOffset_);
 
-    if (!pathPoints.isEmpty()) {
-        setPos(pathPoints[0] + startOffset_);
-    }
+    distanceToTick(wp0.dist, tickPerStep_, tickDistance2D_);
+
+    setPos(curpos_.toPointF());
     updateVisualFrame();
 }
+
+void Enemy::distanceToTick(QVector2D dist,
+                           int &tickPerStep,
+                           QVector2D &inc) {
+    // real distance is higher than visible
+    dist.setY(dist.y() / HEX_X_TO_Y);
+
+    qreal totalDist = dist.length();
+    if (totalDist == 0) {
+        tickPerStep = 1;
+        inc = QVector2D(0, 0);
+        return;
+    }
+    tickPerStep = static_cast<int>(totalDist / speed_ + 0.5);
+    inc = dist / tickPerStep;
+    // scale back
+    inc.setY(inc.y() * HEX_X_TO_Y);
+}
+
 
 void Enemy::updateVisualFrame() {
     if (spriteSheet_.isNull()) {
@@ -67,66 +102,46 @@ void Enemy::updateVisualFrame() {
 }
 
 QVector2D Enemy::getFuturePos(int tick) {
-    QPointF target;
-    QVector2D targetPos;
-    QVector2D direction;
-    qreal distance;
-
-    int tmpWaypoint = currentWaypointIndex;
-    if (tmpWaypoint >= pathPoints.size()) {
-        tmpWaypoint = pathPoints.size() - 1;
+    int tmpWaypoint = currentWaypointIndex_;
+    if (tmpWaypoint >= route_->size()) {
+        tmpWaypoint = route_->size() - 1;
     }
 
-    QVector2D currentPos(x(), y());
-    target = pathPoints[tmpWaypoint] + startOffset_;
+    int tickPerStep = tickPerStep_;
+    QVector2D tcurpos = curpos_;
+    QVector2D ttickDistance2D = tickDistance2D_;
+
     for (int i = 0; i < tick; i++) {
-        targetPos = QVector2D(target.x(), target.y());
-        direction = targetPos - currentPos;
-        distance = direction.length();
-        if (distance <= speed_) {
-            currentPos = targetPos;
-            if (++tmpWaypoint >= pathPoints.size()) {
-                tmpWaypoint = pathPoints.size() - 1;
+        tcurpos += ttickDistance2D;
+
+        if (--tickPerStep <= 0) {
+            if (++tmpWaypoint < route_->size()) {
+                Waypoint wp0 = route_->at(tmpWaypoint);
+                tcurpos = wp0.pos + QVector2D(startOffset_);
+
+                distanceToTick(wp0.dist, tickPerStep, ttickDistance2D);
             }
-            target = pathPoints[tmpWaypoint] + startOffset_;
-        } else {
-            direction.normalize();
-            QVector2D step(direction.x() * speed_,
-                           direction.y() * speed_ * HEX_X_TO_Y);
-            currentPos += step;
         }
     }
-    return currentPos;
+    return tcurpos;
 }
 
 void Enemy::move() {
-    if (currentWaypointIndex >= pathPoints.size()) {
+    if (currentWaypointIndex_ >= route_->size()) {
         return;
     }
 
-    QPointF target = pathPoints[currentWaypointIndex] + startOffset_;
-    QVector2D currentPos(x(), y());
-    QVector2D targetPos(target.x(), target.y());
-        
-    // Calculate vector direction and distance to the next hex center
-    QVector2D direction = targetPos - currentPos;
-    qreal distance = direction.length();
+    curpos_ += tickDistance2D_;
+    if (--tickPerStep_ <= 0) {
+        if (++currentWaypointIndex_ < route_->size()) {
+            Waypoint wp0 = route_->at(currentWaypointIndex_);
+            curpos_ = wp0.pos + QVector2D(startOffset_);
 
-    if (distance <= speed_) {
-        // Close enough! Snap to target and aim for the next waypoint
-        setPos(target);
-        traveledDistance_ += distance;
-        currentWaypointIndex++;
-    } else {
-        // Step forward along the direction vector
-        direction.normalize();
-        QVector2D step(direction.x() * speed_,
-                       direction.y() * speed_ * HEX_X_TO_Y);
-        moveBy(step.x(), step.y());
-        traveledDistance_ = step.length();
-
-        setZValue(y());
+            distanceToTick(wp0.dist, tickPerStep_, tickDistance2D_);
+        }
     }
+    setPos(curpos_.toPointF());
+    setZValue(curpos_.y());
 
     animationTimer_++;
     if (animationTimer_ >= ANIM_SPEED_TICKS) {
@@ -137,7 +152,7 @@ void Enemy::move() {
 }
 
 bool Enemy::hasReachedEnd() const {
-    return currentWaypointIndex >= pathPoints.size();
+    return currentWaypointIndex_ >= route_->size();
 }
 
 void Enemy::takeDamage(int damage) {
@@ -151,7 +166,7 @@ void Enemy::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWi
 
     int w = singleFrame_.width();
     int h = singleFrame_.height();
-    painter->drawPixmap(-w/2, -h, singleFrame_);
+    painter->drawPixmap(-w/2, -h/2, singleFrame_);
 
     if (health_ <= 0) {
         return;
@@ -159,10 +174,9 @@ void Enemy::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWi
 
     qreal healthRatio = static_cast<qreal>(health_) / healthMax_;
 
-   
     // Center the bar over the texture width bounding space
     int barX = -HEALTH_BAR_WIDTH / 2; 
-    int barY = -(h + HEALTH_BAR_OFFSET_Y + HEALTH_BAR_HEIGHT);
+    int barY = -(h/2 + HEALTH_BAR_OFFSET_Y + HEALTH_BAR_HEIGHT);
 
     // Background Layer (Red Container Fill)
     painter->setPen(Qt::NoPen);
@@ -196,7 +210,7 @@ QRectF Enemy::boundingRect() const {
     int w = singleFrame_.width();
     int h = singleFrame_.height();
     int top = HEALTH_BAR_OFFSET_Y + HEALTH_BAR_HEIGHT + 5;
-    QRectF baseRect(-w/2, -h, w, h);
+    QRectF baseRect(-w/2, -h/2, w, h);
     // increase top border:
     baseRect.setTop(baseRect.top() - top);
     return baseRect;

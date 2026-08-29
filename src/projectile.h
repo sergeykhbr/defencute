@@ -19,14 +19,15 @@
 #include <QGraphicsItem>
 #include <QStyleOptionGraphicsItem>
 #include <QVector2D>
+#include <QPointF>
 #include <cmath>
-#include "enemy.h"
+#include <IEnemy.h>
 
 class Projectile : public QGraphicsItem {
  public:
     Projectile(QPointF start,
                QPointF target,
-               Enemy* enemy,
+               IEnemy* enemy,
                qreal speed,     // frames duration
                int damage);
 
@@ -39,7 +40,7 @@ class Projectile : public QGraphicsItem {
  protected:
     QPointF startPos_;
     QPointF targetPos_;
-    Enemy* targetEnemy_;
+    IEnemy* targetEnemy_;
     
     qreal progress_;        // Goes from 0.0 (launch) to 1.0 (impact)
     qreal speed_;           // Controls how fast the arrow flies
@@ -51,7 +52,7 @@ class Arrow : public Projectile {
  public:
     Arrow(QPointF start,
           QPointF target,
-          Enemy* enemy,
+          IEnemy* enemy,
           qreal speed,
           int damage);
 
@@ -71,7 +72,7 @@ class Bullet : public Projectile {
  public:
     Bullet(QPointF start,
             QPointF target,
-            Enemy* enemy,
+            IEnemy* enemy,
             qreal speed,
             int damage);
 
