@@ -31,6 +31,8 @@ class Core : public ICore {
 
     virtual QJsonObject toJsonObject(QString str) override;
 
+    virtual QString getUniqueName() override;
+
     virtual void registerCoreClass(QString name, Interface *iclsface) override;
 
     virtual QObject *createQtClassObject(QObject *parent,

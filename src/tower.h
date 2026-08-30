@@ -46,9 +46,9 @@ class TowerGeneric : public QGraphicsObject,
     // common methods
     virtual void updateCooldown();
     virtual bool isToSell() { return markToSell_; }
-    virtual bool isReadToAtack() { return attackCooldown_ <= 0; }
+    virtual bool isReadyToAtack() { return attackCooldown_ <= 0; }
     virtual bool isInRange(QVector2D  enemy_pos);
-    virtual void updateTarget(IEnemy* enemy);
+    virtual bool updateTarget(IEnemy* enemy);
     virtual int getFramesToTarget() { return frameSpeed_; }
     virtual qreal getRange() { return range_; }
     virtual int getDamage() { return damage_; }

@@ -22,9 +22,14 @@
 
 class ICoreObject : public Interface {
  public:
-    ICoreObject(QString objName) : Interface("ICoreObject"),
-       objName_(objName) {
+    explicit ICoreObject(QString objName) : Interface("ICoreObject"),
+       objName_(objName), iclsface_(nullptr) {
        getpCoreInterface()->registerCoreObject(objName, this);
+    }
+
+    ICoreObject() : Interface("ICoreObject"), iclsface_(nullptr) {
+        objName_ = getpCoreInterface()->getUniqueName();
+        getpCoreInterface()->registerCoreObject(objName_, this);
     }
 
     virtual QString getObjName() { return objName_; }

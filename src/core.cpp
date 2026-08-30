@@ -138,6 +138,10 @@ QJsonObject Core::toJsonObject(QString str)  {
     return doc.object();
 }
 
+QString Core::getUniqueName() {
+    return "obj" + QString::number(++uniqueIdx_);
+}
+
 void Core::registerCoreObject(QString objname,
                               Interface *iface) {
     objList_[objname] = iface;

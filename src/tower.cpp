@@ -150,13 +150,13 @@ bool TowerGeneric::isInRange(QVector2D enemy_pos) {
     return false;
 }
 
-void TowerGeneric::updateTarget(IEnemy* ienemy) {
+bool TowerGeneric::updateTarget(IEnemy* ienemy) {
     if (attackCooldown_ > 0) {
-        return;
+        return false;
     }
 
     if (!ienemy || ienemy->getHealth() <= 0) {
-        return;
+        return false;
     }
 
     // Calculate distance to enemy
@@ -165,7 +165,7 @@ void TowerGeneric::updateTarget(IEnemy* ienemy) {
 
     // Shoot if enemy is in range and cooldown is ready
     if (!isInRange(enemyPos)) {
-        return;
+        return false;
     }
 
     QPointF targetPoint(enemyPos.x(), enemyPos.y());
@@ -174,6 +174,7 @@ void TowerGeneric::updateTarget(IEnemy* ienemy) {
     Projectile *p = createProjectile(hexCenter_, targetPoint, ienemy);
     iscene_->addProjectile(p);
     attackCooldown_ = cooldownTime_;
+    return true;
 }
 
 void TowerGeneric::slotMenuRequest(QString &action) {

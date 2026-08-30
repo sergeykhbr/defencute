@@ -24,6 +24,7 @@ set(qtgame_src
     ${src_top}/common/ICoreObject.h
     ${src_top}/common/ICoreClass.h
     ${src_top}/common/ICore.h
+    ${src_top}/common/ITile.h
     ${src_top}/common/ITower.h
     ${src_top}/common/IEnemy.h
     ${src_top}/common/IScene.h

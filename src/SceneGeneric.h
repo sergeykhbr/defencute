@@ -65,7 +65,11 @@ class SceneGeneric : public QGraphicsScene,
     void setpTile(HexTile *tile, int x, int y);
     HexTile *getpTile(int x, int y);
     void resetCurrentHighlight();
+    void updateEnemies();
     void sortEnemies();
+    void cleanupEnemies();
+    void updateTowers();
+    void updateProjectiles();
     void closeActiveMenu();
 
  private:
@@ -75,7 +79,6 @@ class SceneGeneric : public QGraphicsScene,
     QList<TowerGeneric *> towers_;
     QList<Projectile *> projectiles_;
     QHash<int, HexTile *> tiles_;
-    //QList<QPointF> visualPathPixelPoints;
     QHash<QString, QList<Waypoint>> routes_;
     HexMenu *hexmenu_;
     int hexHNum_;       // total HEX per row
@@ -87,6 +90,20 @@ class SceneGeneric : public QGraphicsScene,
     int goldCnt_;
     int livesCnt_;
     int wavesCnt_;
+
+    struct SpawType {
+        int deltaTime;
+        int offx;
+        int offy;
+        QString enemyClass;
+    };
+    struct EnemyGroupType {
+        int spawnCnt;
+        int spawnPeriod;
+        int spawnTotal;
+        SpawType unit[2];
+    };
+    EnemyGroupType spawnGroup_;
 };
 
 DECLARE_CLASS(SceneGeneric)

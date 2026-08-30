@@ -18,9 +18,10 @@
 #include "hextile.h"
 
 HexTile::HexTile(QPointF center, qreal zvalue)
-    : QGraphicsObject(),
-    itower_(nullptr)
+    : QGraphicsObject()
 {
+    registerInterface(static_cast<ITile *>(this));
+
     brush_ = QBrush(Qt::transparent);
     pen_ = QPen(QColor(240, 240, 240));
     for (int i = 0; i < 6; ++i) {
@@ -31,15 +32,18 @@ HexTile::HexTile(QPointF center, qreal zvalue)
     setZValue(zvalue);
 
     center_ = center;
-    isPath_ = false;
-    isBlocked_ = false;
     isSelected_ = false;
 }
 
-void HexTile::setAsPath() {
-    brush_ = QBrush(QColor(230, 230, 230));
-    pen_ = QPen(Qt::NoPen);
-    isPath_ = true;
+void HexTile::changeState(EState newstate) {
+    ITile::changeState(newstate);
+    if (newstate == ITile::TileRoute) {
+        brush_ = QBrush(QColor(230, 230, 230));
+        pen_ = QPen(Qt::NoPen);
+    } else {
+        brush_ = QBrush(Qt::transparent);
+        pen_ = QPen(QColor(240, 240, 240));
+    }
 }
 
 QRectF HexTile::boundingRect() const {

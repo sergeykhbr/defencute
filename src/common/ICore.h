@@ -28,6 +28,8 @@ class ICore : public Interface {
 
     virtual QJsonObject toJsonObject(QString str) = 0;
 
+    virtual QString getUniqueName() = 0;
+
     virtual void registerCoreClass(QString name, Interface *iclsface) = 0;
 
     virtual QObject *createQtClassObject(QObject *parent,

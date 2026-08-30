@@ -68,6 +68,7 @@ class Enemy : public QGraphicsObject,
     QPointF startOffset_;
     int currentWaypointIndex_;
     int tickPerStep_;
+    int tickDeadCountdown_;
 
     IScene *iscene_;
 

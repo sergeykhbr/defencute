@@ -17,24 +17,24 @@
 #pragma once
 
 #include <IFace.h>
-#include <ITile.h>
 
-class ITower : public Interface {
+class ITile : public Interface {
  public:
-    ITower() : Interface("ITower"), itile_(nullptr) {}
+    enum EState {
+        TileEmpty,
+        TileRoute,
+        TileOccupied,
+        TileUnavailable
+    };
 
-    virtual void attachTile(ITile *itile) {
-        itile_ = itile;
-        itile_->changeState(ITile::TileOccupied);
-    }
+    ITile() : Interface("ITile"), tilestate_(TileEmpty) {}
 
-    virtual void detachTile() {
-        itile_->changeState(ITile::TileEmpty);
-        itile_ = nullptr;
-    }
+    virtual void changeState(EState newstate) { tilestate_ = newstate; }
+    virtual bool isBuildAvailable() { return tilestate_ == TileEmpty; }
+    virtual QPointF getCenter() = 0;
 
  protected:
-    ITile *itile_;
+    EState tilestate_;
 };
 
 

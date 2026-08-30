@@ -23,9 +23,12 @@
 #include <QBrush>
 #include <QPen>
 #include "hexmenu.h"
-#include <ITower.h>
+#include <ICoreObject.h>
+#include <ITile.h>
 
-class HexTile : public QGraphicsObject {
+class HexTile : public QGraphicsObject,
+                public ICoreObject,
+                public ITile {
     Q_OBJECT
  public:
     HexTile(QPointF center, qreal zvalue);
@@ -35,25 +38,19 @@ class HexTile : public QGraphicsObject {
     virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
     virtual QPainterPath shape() const override; // Ensures perfect pixel-accurate hexagon mouse clicks
 
+    // ITile
+    virtual void changeState(EState newstate) override;
+    virtual QPointF getCenter() override { return center_; }
+
     // Common public methods:
-    void setAsPath();
-    QPointF getCenter() { return center_; }
-    bool isBuildAvailable() {
-        return !isPath_ && !isBlocked_ && itower_ == nullptr;
-    }
-    void attachTower(ITower *tower) { itower_ = tower; }
-    void dettachTower() { itower_ = nullptr; }
 
     void selectOn() { isSelected_ = true; update(); }
     void selectOff() { isSelected_ = false; update(); }
 
  private:
-    ITower *itower_;
     QPointF center_;
     QPolygonF polygon_;
     QBrush brush_;
     QPen pen_;
     bool isSelected_;
-    bool isPath_;
-    bool isBlocked_;
 };

@@ -67,7 +67,7 @@ SceneGeneric::SceneGeneric(QObject *parent,
         int N = 0;
         wp0.idx = 0;
         wp0.pos = QVector2D(getHexCenter(x, y));
-        getpTile(x, y)->setAsPath();
+        getpTile(x, y)->changeState(ITile::TileRoute);
 
         QJsonArray routeSteps = routeObj.value("Steps").toArray();
         for (auto step : routeSteps) {
@@ -78,7 +78,7 @@ SceneGeneric::SceneGeneric(QObject *parent,
             for (int i = 0; i < N; i++) {
                 x += dx;
                 y += dy;
-                getpTile(x, y)->setAsPath();
+                getpTile(x, y)->changeState(ITile::TileRoute);
             }
             wp1.idx = wp0.idx + 1;
             wp1.pos = QVector2D(getHexCenter(x, y));
@@ -108,15 +108,23 @@ SceneGeneric::SceneGeneric(QObject *parent,
     connect(this, &SceneGeneric::signalUpdateWave,
             infoPanel_, &InfoPanel::slotUpdateWave);
 
-    // Spawn our path-following circle enemy
-
-//    enemy = new Enemy(visualPathPixelPoints, QPointF(0, -10));
-//    addItem(enemy);
-//    enemies_.push_back(enemy);
-
     emit signalUpdateGold(goldCnt_);
     emit signalUpdateLives(livesCnt_);
     emit signalUpdateWave(wavesCnt_);
+
+    // Spawing scenario:
+    spawnGroup_.spawnTotal = 10;
+    spawnGroup_.spawnPeriod = 60 * 10;
+    spawnGroup_.spawnCnt = 0;
+    spawnGroup_.unit[0].deltaTime = 2;
+    spawnGroup_.unit[0].enemyClass = "Enemy";
+    spawnGroup_.unit[0].offx = 10;
+    spawnGroup_.unit[0].offy = -5;
+
+    spawnGroup_.unit[1].deltaTime = 120;
+    spawnGroup_.unit[1].enemyClass = "Enemy";
+    spawnGroup_.unit[1].offx = -15;
+    spawnGroup_.unit[1].offy = 5;
 }
 
 void SceneGeneric::setpTile(HexTile *tile, int x, int y) {
@@ -214,7 +222,7 @@ void SceneGeneric::buildTower(QString &towerclass) {
     if (newTower) {
         addItem(newTower);
         towers_.append(newTower);
-        hextileSelected_->attachTower(newTower);
+        newTower->attachTile(static_cast<ITile *>(hextileSelected_));
 
         goldCnt_ -= newTower->getPrice();
         emit signalUpdateGold(goldCnt_);
@@ -236,6 +244,31 @@ void SceneGeneric::addProjectile(Projectile *p) {
     addItem(p);
 }
 
+void SceneGeneric::updateEnemies() {
+    // Enemy update positions
+    for (Enemy *enemy : enemies_) {
+        enemy->move();
+    }
+
+    // Spawn new enemies:
+    if (++spawnGroup_.spawnCnt >= spawnGroup_.spawnPeriod) {
+        spawnGroup_.spawnCnt = 0;
+    }
+    for (int i = 0; i < 2; i++) {
+        SpawType *unit = &spawnGroup_.unit[i];
+        if (unit->deltaTime == spawnGroup_.spawnCnt) {
+            QJsonObject ecfg;
+            ecfg["Route"] = "route1";
+            ecfg["offx"] = unit->offx;
+            ecfg["offy"] = unit->offy;
+            ecfg["scene"] = getObjName();
+            Enemy *enemy = new Enemy(nullptr, unit->enemyClass, ecfg);
+            addItem(enemy);
+            enemies_.push_back(enemy);
+        }
+    }
+}
+
 void SceneGeneric::sortEnemies() {
     if (enemies_.isEmpty()) {
         return;
@@ -249,33 +282,31 @@ void SceneGeneric::sortEnemies() {
               );
 }
 
-void SceneGeneric::gameLoop() {
-    // Spawn new enemies:
-    if (enemies_.size() < 2) {
-        QJsonObject ecfg;
-        ecfg["Route"] = "route1";
-        ecfg["offx"] = -20 * enemies_.size();
-        ecfg["offy"] = 10 * enemies_.size();
-        ecfg["scene"] = getObjName();
-        Enemy *enemy = new Enemy(nullptr, "Enemy", ecfg);
-        addItem(enemy);
-        enemies_.push_back(enemy);
+void SceneGeneric::cleanupEnemies() {
+    for (int i = enemies_.size() - 1; i >= 0; --i) {
+        Enemy *enemy = enemies_[i];          
+        if (enemy->hasReachedEnd()) {
+            if (enemy->getHealth() <= 0) {
+                goldCnt_ += enemy->getReward();
+                emit signalUpdateGold(goldCnt_);
+            }
+            enemies_.removeAt(i);
+            removeItem(enemy);
+            delete enemy; // Reward player with gold here
+        }
     }
+}
 
-    // Enemy update positions
-    for (Enemy *enemy : enemies_) {
-        enemy->move();
-    }
-    sortEnemies();
-
-    // Tower atack
+void SceneGeneric::updateTowers() {
     auto it = towers_.begin();
+    // requests to sell
     while (it != towers_.end()) {
         TowerGeneric *tower = *it;
         if (tower->isToSell()) {
             it = towers_.erase(it);
             removeItem(tower);
             goldCnt_ += tower->getPrice();
+            tower->detachTile();
             delete tower;
 
             emit signalUpdateGold(goldCnt_);
@@ -284,15 +315,21 @@ void SceneGeneric::gameLoop() {
         tower->updateCooldown();
         ++it;
     }
+    // Tower atack
     for (TowerGeneric *tower : towers_) {
-        if (!tower->isReadToAtack()) {
+        if (!tower->isReadyToAtack()) {
             continue;
         }
         for (Enemy *enemy : enemies_) {
-            tower->updateTarget(enemy);
+            if (tower->updateTarget(enemy)) {
+                // single target selected
+                break;
+            }
         }
     }
+}
 
+void SceneGeneric::updateProjectiles() {
     // Step all active flying arrows forward and clean up dead ones
     for (int i = projectiles_.size() - 1; i >= 0; --i) {
         Projectile* prj = projectiles_[i];
@@ -304,24 +341,15 @@ void SceneGeneric::gameLoop() {
             delete prj;
         }
     }
+}
 
-    // Cleanup dead enemy:
-    for (int i = enemies_.size() - 1; i >= 0; --i) {
-        Enemy *enemy = enemies_[i];          
-#if 1
-        if (enemy->hasReachedEnd()) {
-            if (enemy->getHealth() <= 0) {
-                goldCnt_ += enemy->getReward();
-                emit signalUpdateGold(goldCnt_);
-            }
-            enemies_.removeAt(i);
-            removeItem(enemy);
-            delete enemy; // Reward player with gold here
-        }
-#else
-        if (enemy->hasReachedEnd() || enemy->getHealth() <= 0) {
-            enemy->resetPosition();
-        }
-#endif
-    }
+void SceneGeneric::gameLoop() {
+    updateEnemies();
+    sortEnemies();
+
+    updateTowers();
+
+    updateProjectiles();
+
+    cleanupEnemies();
 }

@@ -60,6 +60,7 @@ void Enemy::resetPosition() {
     animationTimer_ = 0;
     directionRow_ = 0;
     traveledDistance_ = 0;
+    tickDeadCountdown_ = 0;
     Waypoint wp0 = route_->at(currentWaypointIndex_);
     curpos_ = wp0.pos + QVector2D(startOffset_);
 
@@ -98,7 +99,11 @@ void Enemy::updateVisualFrame() {
     int srcY = directionRow_ * FRAME_HEIGHT;
 
     // Crop the single active frame out of the master image sheet
-    singleFrame_ = spriteSheet_.copy(srcX, srcY, FRAME_WIDTH, FRAME_HEIGHT);
+    if (health_ > 0) {
+        singleFrame_ = spriteSheet_.copy(srcX, srcY, FRAME_WIDTH, FRAME_HEIGHT);
+    } else {
+        singleFrame_ = spriteSheet_.copy(0, FRAME_HEIGHT, FRAME_WIDTH, FRAME_HEIGHT);
+    }
 }
 
 QVector2D Enemy::getFuturePos(int tick) {
@@ -130,35 +135,47 @@ void Enemy::move() {
     if (currentWaypointIndex_ >= route_->size()) {
         return;
     }
-
-    curpos_ += tickDistance2D_;
-    if (--tickPerStep_ <= 0) {
-        if (++currentWaypointIndex_ < route_->size()) {
-            Waypoint wp0 = route_->at(currentWaypointIndex_);
-            curpos_ = wp0.pos + QVector2D(startOffset_);
-
-            distanceToTick(wp0.dist, tickPerStep_, tickDistance2D_);
+    if (health_ <= 0) {
+        if (tickDeadCountdown_) {
+            --tickDeadCountdown_;
         }
+    } else {
+        curpos_ += tickDistance2D_;
+        if (--tickPerStep_ <= 0) {
+            if (++currentWaypointIndex_ < route_->size()) {
+                Waypoint wp0 = route_->at(currentWaypointIndex_);
+                curpos_ = wp0.pos + QVector2D(startOffset_);
+
+                distanceToTick(wp0.dist, tickPerStep_, tickDistance2D_);
+            }
+        }
+        setPos(curpos_.toPointF());
+        setZValue(curpos_.y());
     }
-    setPos(curpos_.toPointF());
-    setZValue(curpos_.y());
 
     animationTimer_++;
     if (animationTimer_ >= ANIM_SPEED_TICKS) {
         animationTimer_ = 0;
         currentFrameIndex_ = (currentFrameIndex_ + 1) % 3; // Loop between frames 0, 1, 2
         updateVisualFrame();
+        update();
     }
 }
 
 bool Enemy::hasReachedEnd() const {
-    return currentWaypointIndex_ >= route_->size();
+    return currentWaypointIndex_ >= route_->size()
+        || (health_ <= 0 && tickDeadCountdown_ == 0);
 }
 
 void Enemy::takeDamage(int damage) {
+    int t = health_;
     health_ -= damage;
     if (health_ < 0) {
         health_ = 0;
+    }
+    if (t && !health_) {
+        tickDeadCountdown_ = 180;
+        animationTimer_ = ANIM_SPEED_TICKS;
     }
 }
 
