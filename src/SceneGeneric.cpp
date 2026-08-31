@@ -19,10 +19,13 @@
 #include "SceneGeneric.h"
 #include <algorithm>
 #include <QJsonArray>
+#include <QDebug>
 
-const qreal HEX_HEIGHT = std::sqrt(3) * HEX_RADIUS_Y;
-const qreal HORIZ_SPACING = 1.5 * HEX_RADIUS_X;
+//const qreal HEX_HEIGHT = std::sqrt(3) * HEX_RADIUS_Y;
+//const qreal HORIZ_SPACING = 1.5 * HEX_RADIUS_X;
 
+const qreal HEX_WIDTH = std::sqrt(3) * HEX_RADIUS_X;
+const qreal VERT_SPACING = 1.5 * HEX_RADIUS_Y;
 
 SceneGeneric::SceneGeneric(QObject *parent,
                             QString objname,
@@ -39,10 +42,12 @@ SceneGeneric::SceneGeneric(QObject *parent,
     cfg_["scene"] = getObjName();
 
     currentHoveredHex_ = nullptr;
-    setSceneRect(0, 0, 800, 600);
+    setSceneRect(0, 0, SCREEN_RESOLUTION_X, SCREEN_RESOLUTION_Y);
 
-    hexHNum_ = static_cast<int>(width() / HORIZ_SPACING) + 1;
-    hexVNum_ = static_cast<int>(height() / HEX_HEIGHT) + 1;
+    //hexHNum_ = static_cast<int>(width() / HORIZ_SPACING) + 3;
+    //hexVNum_ = static_cast<int>(height() / HEX_HEIGHT) + 3;
+    hexHNum_ = static_cast<int>(width() / HEX_WIDTH) + 3;
+    hexVNum_ = static_cast<int>(height() / VERT_SPACING) + 3;
 
     int ztile = cfg_["ZDepth"].toObject()["HexTile"].toInt();
     for (int col = 0; col < hexHNum_; ++col) {
@@ -78,7 +83,11 @@ SceneGeneric::SceneGeneric(QObject *parent,
             for (int i = 0; i < N; i++) {
                 x += dx;
                 y += dy;
-                getpTile(x, y)->changeState(ITile::TileRoute);
+                if (getpTile(x, y)) {
+                    getpTile(x, y)->changeState(ITile::TileRoute);
+                } else {
+                    qDebug() << "Tile out-of-border";
+                }
             }
             wp1.idx = wp0.idx + 1;
             wp1.pos = QVector2D(getHexCenter(x, y));
@@ -125,6 +134,21 @@ SceneGeneric::SceneGeneric(QObject *parent,
     spawnGroup_.unit[1].enemyClass = "Enemy";
     spawnGroup_.unit[1].offx = -15;
     spawnGroup_.unit[1].offy = 5;
+}
+
+// Helper to turn grid columns/rows into exact screen pixel centers
+QPointF SceneGeneric::getHexCenter(int col, int row) {
+    //qreal posX = (col - 1) * HORIZ_SPACING + HEX_RADIUS_X;
+    //qreal posY = (row - 1) * HEX_HEIGHT + (HEX_HEIGHT / 2.0);
+    //if (col % 2 != 0) {
+    //    posY += HEX_HEIGHT / 2.0;
+    //}
+    qreal posX = (col - 1) * HEX_WIDTH + (HEX_WIDTH / 2.0);
+    qreal posY = (row - 1) * VERT_SPACING + HEX_RADIUS_Y;
+    if (row % 2 != 0) {
+        posX += HEX_WIDTH / 2.0;
+    }
+    return QPointF(posX, posY);
 }
 
 void SceneGeneric::setpTile(HexTile *tile, int x, int y) {
@@ -229,15 +253,19 @@ void SceneGeneric::buildTower(QString &towerclass) {
     }
 }
 
-// Helper to turn grid columns/rows into exact screen pixel centers
-QPointF SceneGeneric::getHexCenter(int col, int row) {
-    qreal posX = col * HORIZ_SPACING + HEX_RADIUS_X;
-    qreal posY = row * HEX_HEIGHT + (HEX_HEIGHT / 2.0);
-    if (col % 2 != 0) {
-        posY += HEX_HEIGHT / 2.0;
-    }
-    return QPointF(posX, posY);
+void SceneGeneric::unitKilled(int reward) {
+    goldCnt_ += reward;
+    emit signalUpdateGold(goldCnt_);
 }
+
+void SceneGeneric::unitPassed() {
+    if (--livesCnt_ < 0) {
+        livesCnt_ = 0;
+        qDebug() << "TODO: end of game";
+    }
+    emit signalUpdateLives(livesCnt_);
+}
+
 
 void SceneGeneric::addProjectile(Projectile *p) {
     projectiles_.append(p);
@@ -286,10 +314,6 @@ void SceneGeneric::cleanupEnemies() {
     for (int i = enemies_.size() - 1; i >= 0; --i) {
         Enemy *enemy = enemies_[i];          
         if (enemy->hasReachedEnd()) {
-            if (enemy->getHealth() <= 0) {
-                goldCnt_ += enemy->getReward();
-                emit signalUpdateGold(goldCnt_);
-            }
             enemies_.removeAt(i);
             removeItem(enemy);
             delete enemy; // Reward player with gold here

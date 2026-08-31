@@ -33,7 +33,7 @@ Enemy::Enemy(QObject *parent,
     : QGraphicsObject(),
     ICoreObject(objname),
     cfg_(cfg),
-    speed_(2),
+    speed_(0.2),
     healthMax_(100),
     reward_(10),
     traveledDistance_(0)
@@ -60,7 +60,8 @@ void Enemy::resetPosition() {
     animationTimer_ = 0;
     directionRow_ = 0;
     traveledDistance_ = 0;
-    tickDeadCountdown_ = 0;
+    tickDeadCnt_ = 0;
+    estate_ = StateMoving;
     Waypoint wp0 = route_->at(currentWaypointIndex_);
     curpos_ = wp0.pos + QVector2D(startOffset_);
 
@@ -99,9 +100,9 @@ void Enemy::updateVisualFrame() {
     int srcY = directionRow_ * FRAME_HEIGHT;
 
     // Crop the single active frame out of the master image sheet
-    if (health_ > 0) {
+    if (estate_ == StateMoving) {
         singleFrame_ = spriteSheet_.copy(srcX, srcY, FRAME_WIDTH, FRAME_HEIGHT);
-    } else {
+    } else if (estate_ == StateDead) {
         singleFrame_ = spriteSheet_.copy(0, FRAME_HEIGHT, FRAME_WIDTH, FRAME_HEIGHT);
     }
 }
@@ -132,14 +133,7 @@ QVector2D Enemy::getFuturePos(int tick) {
 }
 
 void Enemy::move() {
-    if (currentWaypointIndex_ >= route_->size()) {
-        return;
-    }
-    if (health_ <= 0) {
-        if (tickDeadCountdown_) {
-            --tickDeadCountdown_;
-        }
-    } else {
+    if (estate_ == StateMoving) {
         curpos_ += tickDistance2D_;
         if (--tickPerStep_ <= 0) {
             if (++currentWaypointIndex_ < route_->size()) {
@@ -147,10 +141,23 @@ void Enemy::move() {
                 curpos_ = wp0.pos + QVector2D(startOffset_);
 
                 distanceToTick(wp0.dist, tickPerStep_, tickDistance2D_);
+            } else {
+                estate_ = StateFinished;
+                iscene_->unitPassed();
             }
         }
         setPos(curpos_.toPointF());
         setZValue(curpos_.y());
+    } else if (estate_ == StateAttacking) {
+    } else if (estate_ == StateKilled) {
+        iscene_->unitKilled(reward_);
+        tickDeadCnt_ = 0;
+        estate_ = StateDead;
+    } else if (estate_ == StateDead) {
+        if (++tickDeadCnt_ >= 300) {
+            estate_ = StateFinished;
+        }
+    } else if (estate_ == StateFinished) {
     }
 
     animationTimer_++;
@@ -163,19 +170,17 @@ void Enemy::move() {
 }
 
 bool Enemy::hasReachedEnd() const {
-    return currentWaypointIndex_ >= route_->size()
-        || (health_ <= 0 && tickDeadCountdown_ == 0);
+    return estate_ == StateFinished;
 }
 
 void Enemy::takeDamage(int damage) {
-    int t = health_;
-    health_ -= damage;
-    if (health_ < 0) {
-        health_ = 0;
-    }
-    if (t && !health_) {
-        tickDeadCountdown_ = 180;
-        animationTimer_ = ANIM_SPEED_TICKS;
+    if (estate_ < StateKilled) {
+        health_ -= damage;
+        if (health_ <= 0) {
+            health_ = 0;
+            estate_ = StateKilled;
+            animationTimer_ = ANIM_SPEED_TICKS;
+        }
     }
 }
 
@@ -185,29 +190,27 @@ void Enemy::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWi
     int h = singleFrame_.height();
     painter->drawPixmap(-w/2, -h/2, singleFrame_);
 
-    if (health_ <= 0) {
-        return;
+    if (health_ > 0) {
+        qreal healthRatio = static_cast<qreal>(health_) / healthMax_;
+
+        // Center the bar over the texture width bounding space
+        int barX = -HEALTH_BAR_WIDTH / 2; 
+        int barY = -(h/2 + HEALTH_BAR_OFFSET_Y + HEALTH_BAR_HEIGHT);
+
+        // Background Layer (Red Container Fill)
+        painter->setPen(Qt::NoPen);
+        painter->setBrush(Qt::red);
+        painter->drawRect(QRectF(barX, barY, HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT));
+
+        // Foreground Layer (Green Value Fill)
+        painter->setBrush(Qt::green);
+        painter->drawRect(QRectF(barX, barY, HEALTH_BAR_WIDTH * healthRatio, HEALTH_BAR_HEIGHT));
+
+        // Border Outline Frame
+        painter->setPen(QPen(Qt::black, 1));
+        painter->setBrush(Qt::NoBrush);
+        painter->drawRect(QRectF(barX, barY, HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT));
     }
-
-    qreal healthRatio = static_cast<qreal>(health_) / healthMax_;
-
-    // Center the bar over the texture width bounding space
-    int barX = -HEALTH_BAR_WIDTH / 2; 
-    int barY = -(h/2 + HEALTH_BAR_OFFSET_Y + HEALTH_BAR_HEIGHT);
-
-    // Background Layer (Red Container Fill)
-    painter->setPen(Qt::NoPen);
-    painter->setBrush(Qt::red);
-    painter->drawRect(QRectF(barX, barY, HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT));
-
-    // Foreground Layer (Green Value Fill)
-    painter->setBrush(Qt::green);
-    painter->drawRect(QRectF(barX, barY, HEALTH_BAR_WIDTH * healthRatio, HEALTH_BAR_HEIGHT));
-
-    // Border Outline Frame
-    painter->setPen(QPen(Qt::black, 1));
-    painter->setBrush(Qt::NoBrush);
-    painter->drawRect(QRectF(barX, barY, HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT));
 
 #if 0
     // Debug draw boundRect:

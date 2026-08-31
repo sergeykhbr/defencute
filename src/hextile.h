@@ -21,6 +21,7 @@
 #include <QPointF>
 #include <QPolygonF>
 #include <QBrush>
+#include <QPixmap>
 #include <QPen>
 #include "hexmenu.h"
 #include <ICoreObject.h>
@@ -50,6 +51,9 @@ class HexTile : public QGraphicsObject,
  private:
     QPointF center_;
     QPolygonF polygon_;
+    QPainterPath shape_;
+    QPixmap spriteSheet_;
+    QPixmap sprite_;
     QBrush brush_;
     QPen pen_;
     bool isSelected_;

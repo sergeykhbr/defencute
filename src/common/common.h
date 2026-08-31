@@ -18,8 +18,11 @@
 
 #include <inttypes.h>
 
+const int SCREEN_RESOLUTION_X = 1024;
+const int SCREEN_RESOLUTION_Y = 768;
+
 const double HEX_X_TO_Y = 0.6;
-const double HEX_RADIUS_X = 24.0;
+const double HEX_RADIUS_X = 1024 / 32;//24.0;
 const double HEX_RADIUS_Y = HEX_X_TO_Y * HEX_RADIUS_X;
 
 

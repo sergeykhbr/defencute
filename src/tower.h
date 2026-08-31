@@ -68,6 +68,8 @@ class TowerGeneric : public QGraphicsObject,
 
     virtual QRectF boundingRect() const override;
 
+    virtual QPainterPath shape() const override;
+
     virtual Projectile *createProjectile(QPointF &start,
                                          QPointF &target,
                                          IEnemy* ienemy) = 0;
@@ -77,6 +79,7 @@ class TowerGeneric : public QGraphicsObject,
     QPointF hexCenter_;
     QPixmap spriteSheet_;
     QPixmap singleFrame_;
+    QPainterPath shape_;
 
     int spriteShiftY_;      // offset of sprite relative hex center
     int cooldownTime_;

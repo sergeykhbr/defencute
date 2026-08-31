@@ -68,7 +68,7 @@ class Enemy : public QGraphicsObject,
     QPointF startOffset_;
     int currentWaypointIndex_;
     int tickPerStep_;
-    int tickDeadCountdown_;
+    int tickDeadCnt_;
 
     IScene *iscene_;
 
@@ -80,4 +80,12 @@ class Enemy : public QGraphicsObject,
     int healthMax_;
     int reward_;
     qreal traveledDistance_;
+
+    enum EState {
+        StateMoving,
+        StateAttacking,
+        StateKilled,
+        StateDead,
+        StateFinished
+    } estate_;
 };

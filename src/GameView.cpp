@@ -14,10 +14,11 @@
  *  limitations under the License.
  */
 
+#include <common.h>
 #include "GameView.h"
 
 GameView::GameView() {
-    setFixedSize(802, 602);
+    setFixedSize(SCREEN_RESOLUTION_X + 2, SCREEN_RESOLUTION_Y + 2);
 
     setRenderHint(QPainter::Antialiasing);
     setViewportUpdateMode(QGraphicsView::SmartViewportUpdate);

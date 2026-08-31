@@ -37,6 +37,8 @@ class IScene : public Interface {
     virtual void addProjectile(Projectile *p) = 0;
     virtual QList<Waypoint> *getpRoute(QString name) = 0;
     virtual QPointF getHexCenter(int x, int y) = 0;
+    virtual void unitKilled(int reward) = 0;
+    virtual void unitPassed() = 0;
 };
 
 

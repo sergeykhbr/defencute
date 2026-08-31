@@ -17,6 +17,8 @@
 #pragma once
 
 #include <IFace.h>
+#include <QPointF>
+#include <QPainterPath>
 
 class ITile : public Interface {
  public:

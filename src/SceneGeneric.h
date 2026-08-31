@@ -48,6 +48,8 @@ class SceneGeneric : public QGraphicsScene,
     virtual void addProjectile(Projectile *p) override;
     virtual QList<Waypoint> *getpRoute(QString name) override;
     virtual QPointF getHexCenter(int x, int y) override;
+    virtual void unitKilled(int reward) override;
+    virtual void unitPassed() override;
 
     virtual void gameLoop();
 

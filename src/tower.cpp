@@ -14,6 +14,7 @@
  *  limitations under the License.
  */
 
+#include <QPolygonF>
 #include <common.h>
 #include <ICore.h>
 #include "tower.h"
@@ -39,6 +40,14 @@ TowerGeneric::TowerGeneric(QObject *parent,
     qreal posy = cfg["posy"].toDouble();
     hexCenter_ = QPointF(posx, posy);
     spriteShiftY_ = 24 - 2;
+
+    QPolygonF polygon;
+    for (int i = 0; i < 6; ++i) {
+        qreal angle_rad = M_PI / 3 * i + M_PI / 2;
+        polygon << QPointF(HEX_RADIUS_X * cos(angle_rad),
+                           HEX_RADIUS_Y * sin(angle_rad));
+    }
+    shape_.addPolygon(polygon);
 
     menucfg_["TowerName"] = objname;
     menucfg_["MenuZDepth"] = cfg["MenuZDepth"].toInt();
@@ -91,6 +100,10 @@ QRectF TowerGeneric::boundingRect() const {
     return QRectF(topLeftX, topLeftY, w, h);
 }
 
+QPainterPath TowerGeneric::shape() const {
+    return shape_;
+}
+
 void TowerGeneric::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
     QStyleOptionGraphicsItem customOption(*option);
     customOption.state &= ~QStyle::State_Selected;
@@ -125,6 +138,16 @@ void TowerGeneric::paint(QPainter *painter, const QStyleOptionGraphicsItem *opti
     painter->setPen(debugPen);
     painter->setBrush(QColor(255, 0, 100, 20)); // Soft translucent red fill back drop highlight
     painter->drawRect(this->boundingRect());
+    painter->restore();
+#endif
+#if 0
+    // Debug draw shape():
+    QPen shapePen(QColor(0, 200, 255, 255), 1.5, Qt::SolidLine);
+    shapePen.setCosmetic(true); 
+    painter->save();
+    painter->setPen(shapePen);
+    painter->setBrush(QColor(0, 200, 255, 30)); // Soft translucent blue fill
+    painter->drawPath(shape());
     painter->restore();
 #endif
 }

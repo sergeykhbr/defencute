@@ -28,6 +28,7 @@ MainWindow::MainWindow(QJsonObject &cfg) : QMainWindow(nullptr), m_isPaused(fals
     m_stackedLayout = new QStackedLayout(centralWidget);
     setCentralWidget(centralWidget);
 
+    setWindowFlags(Qt::Window | Qt::FramelessWindowHint);
 
     GameView *view = new GameView();
 
