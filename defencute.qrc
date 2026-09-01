@@ -2,6 +2,8 @@
 <qresource>
     <file>images/base_walk_strip8.png</file>
     <file>images/build_icons_64x8.png</file>
+    <file>images/digits_gold64.png</file>
+    <file>images/user_actions.png</file>
     <file>images/archer_tower.png</file>
     <file>images/rifle_tower.png</file>
     <file>images/info_panel_bkg.png</file>

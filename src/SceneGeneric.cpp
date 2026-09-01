@@ -44,8 +44,6 @@ SceneGeneric::SceneGeneric(QObject *parent,
     currentHoveredHex_ = nullptr;
     setSceneRect(0, 0, SCREEN_RESOLUTION_X, SCREEN_RESOLUTION_Y);
 
-    //hexHNum_ = static_cast<int>(width() / HORIZ_SPACING) + 3;
-    //hexVNum_ = static_cast<int>(height() / HEX_HEIGHT) + 3;
     hexHNum_ = static_cast<int>(width() / HEX_WIDTH) + 3;
     hexVNum_ = static_cast<int>(height() / VERT_SPACING) + 3;
 
@@ -58,6 +56,23 @@ SceneGeneric::SceneGeneric(QObject *parent,
             addItem(hex);
         }
     }
+    QJsonArray Levels = cfg_["Levels"].toArray();
+    for (auto levelRef : Levels) {
+        QJsonObject l = levelRef.toObject();
+        if (l["Name"].toString() != "SceneGeneric") {
+            continue;
+        }
+        QJsonArray Waves = l["Waves"].toArray();
+        SpawnEventType spawnEvent;
+        for (auto waveList : Waves) {
+            for (auto waveRef : waveList.toArray()) {
+                addWave(waveRef.toObject(), &spawnEvent);
+                scenario_.push_back(spawnEvent);
+            }
+        }
+    }
+    scenarioPos_ = 0;
+
     // high-light the path tiles
     QJsonArray routes = cfg_.value("Routes").toArray();
     for (auto route : routes) {
@@ -122,7 +137,7 @@ SceneGeneric::SceneGeneric(QObject *parent,
     emit signalUpdateWave(wavesCnt_);
 
     // Spawing scenario:
-    spawnGroup_.spawnTotal = 10;
+    /*spawnGroup_.respawnTotal = 10;
     spawnGroup_.spawnPeriod = 60 * 10;
     spawnGroup_.spawnCnt = 0;
     spawnGroup_.unit[0].deltaTime = 2;
@@ -133,16 +148,40 @@ SceneGeneric::SceneGeneric(QObject *parent,
     spawnGroup_.unit[1].deltaTime = 120;
     spawnGroup_.unit[1].enemyClass = "Enemy";
     spawnGroup_.unit[1].offx = -15;
-    spawnGroup_.unit[1].offy = 5;
+    spawnGroup_.unit[1].offy = 5;*/
+}
+
+void SceneGeneric::addWave(QJsonObject wave, SpawnEventType *ev) {
+    ev->name = wave["Name"].toString();
+    ev->spawnCnt = 0;
+    if (wave["Type"].toString() == "EventUser") {
+        ev->type = SpawnEventUser;
+    } else if (wave["Type"].toString() == "EventTimeout") {
+        ev->type = SpawnEventTimeout;
+        ev->spawnPeriod = wave["Period"].toInt();
+    } else if (wave["Type"].toString() == "EventWaveEnd") {
+        ev->type = SpawnEventWaveEnd;
+    } else if (wave["Type"].toString() == "Group") {
+        ev->type = SpawnGroup;
+        ev->spawnPeriod = wave["Period"].toInt();
+        ev->respawnTotal = wave["Respawn"].toInt();
+
+        QJsonArray Spawn = wave["Spawn"].toArray();
+        SpawnUnitType unit;
+        for (auto unitRef : Spawn) {
+            QJsonObject uobj = unitRef.toObject();
+            unit.dt = uobj["dt"].toInt();
+            unit.offx = uobj["offx"].toInt();
+            unit.offy = uobj["offy"].toInt();
+            unit.enemyClass = uobj["Spawn"].toString();
+            unit.routeName = uobj["Route"].toString();
+            ev->units.push_back(unit);
+        }
+    }
 }
 
 // Helper to turn grid columns/rows into exact screen pixel centers
 QPointF SceneGeneric::getHexCenter(int col, int row) {
-    //qreal posX = (col - 1) * HORIZ_SPACING + HEX_RADIUS_X;
-    //qreal posY = (row - 1) * HEX_HEIGHT + (HEX_HEIGHT / 2.0);
-    //if (col % 2 != 0) {
-    //    posY += HEX_HEIGHT / 2.0;
-    //}
     qreal posX = (col - 1) * HEX_WIDTH + (HEX_WIDTH / 2.0);
     qreal posY = (row - 1) * VERT_SPACING + HEX_RADIUS_Y;
     if (row % 2 != 0) {
@@ -272,29 +311,69 @@ void SceneGeneric::addProjectile(Projectile *p) {
     addItem(p);
 }
 
+void SceneGeneric::updateScenario() {
+    SpawnEventType *cur = &scenario_.at(scenarioPos_);
+
+    if (cur->type == SpawnEventWaveEnd) {
+    } else if (cur->type == SpawnEventUser) {
+        qDebug() << "EventUser:" << cur->name;
+        scenarioPos_++; // let's suppose user action was done
+    } else if (cur->type == SpawnEventTimeout) {
+        if (++cur->spawnCnt >= cur->spawnPeriod) {
+            qDebug() << "EventTimeout:" << QString::number(cur->spawnPeriod) << "finished";
+            scenarioPos_++;
+            return;
+        }
+    } else  if (cur->type == SpawnGroup) {
+        qDebug() << "Activate groupd:" << cur->name;
+        activeGroups_.push_back(*cur);
+        scenarioPos_++;
+        return;
+    }
+}
+
 void SceneGeneric::updateEnemies() {
     // Enemy update positions
     for (Enemy *enemy : enemies_) {
         enemy->move();
     }
 
-    // Spawn new enemies:
-    if (++spawnGroup_.spawnCnt >= spawnGroup_.spawnPeriod) {
-        spawnGroup_.spawnCnt = 0;
-    }
-    for (int i = 0; i < 2; i++) {
-        SpawType *unit = &spawnGroup_.unit[i];
-        if (unit->deltaTime == spawnGroup_.spawnCnt) {
-            QJsonObject ecfg;
-            ecfg["Route"] = "route1";
-            ecfg["offx"] = unit->offx;
-            ecfg["offy"] = unit->offy;
-            ecfg["scene"] = getObjName();
-            Enemy *enemy = new Enemy(nullptr, unit->enemyClass, ecfg);
-            addItem(enemy);
-            enemies_.push_back(enemy);
+    // Check active respawn groups
+    auto it = activeGroups_.begin();
+    while (it != activeGroups_.end()) {
+        SpawnEventType &gr = *it;
+        for (auto &unit : gr.units){
+            if (unit.dt == gr.spawnCnt) {
+                QJsonObject ecfg;
+                ecfg["Route"] = unit.routeName;
+                ecfg["offx"] = unit.offx;
+                ecfg["offy"] = unit.offy;
+                ecfg["scene"] = getObjName();
+                qDebug() << "CreateEnemy group:" << gr.name
+                         << "dt:" << QString::number(unit.dt)
+                         << "offx:" << QString::number(unit.offx)
+                         << "offy:" << QString::number(unit.offy);
+                Enemy *enemy = new Enemy(nullptr, unit.enemyClass, ecfg);
+                addItem(enemy);
+                enemies_.push_back(enemy);
+            } else if (unit.dt > gr.spawnCnt) {
+                break;
+            }
         }
+
+        if (++gr.spawnCnt >= gr.spawnPeriod) {
+            gr.spawnCnt = 0;
+            if (--gr.respawnTotal <= 0) {
+                qDebug() << "Removing group:" << gr.name;
+                it = activeGroups_.erase(it);
+                continue;
+            } else {
+                qDebug() << "Respown group:" << gr.name << "Left:" << QString::number(gr.respawnTotal);
+            }
+        }
+        it++;
     }
+
 }
 
 void SceneGeneric::sortEnemies() {
@@ -368,6 +447,8 @@ void SceneGeneric::updateProjectiles() {
 }
 
 void SceneGeneric::gameLoop() {
+    updateScenario();
+
     updateEnemies();
     sortEnemies();
 

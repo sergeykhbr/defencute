@@ -32,6 +32,7 @@
 #include <ICoreClass.h>
 #include <ICoreObject.h>
 #include <IScene.h>
+#include <vector>
 
 class SceneGeneric : public QGraphicsScene,
                      public ICoreObject,
@@ -63,10 +64,35 @@ class SceneGeneric : public QGraphicsScene,
     void signalUpdateWave(int wave);
 
  private:
+    enum ESpawnType {
+        SpawnEventUser,
+        SpawnEventTimeout,
+        SpawnEventWaveEnd,
+        SpawnGroup
+    };
+    struct SpawnUnitType {
+        int dt;
+        int offx;
+        int offy;
+        QString enemyClass;
+        QString routeName;
+    };
+    struct SpawnEventType {
+        ESpawnType type;
+        QString name;
+        int spawnCnt;
+        int spawnPeriod;
+        int respawnTotal;
+        std::vector<SpawnUnitType> units;
+    };
+
+    void addWave(QJsonObject wave, SpawnEventType *ev);
     // Helper to turn grid columns/rows into exact screen pixel centers
     void setpTile(HexTile *tile, int x, int y);
     HexTile *getpTile(int x, int y);
     void resetCurrentHighlight();
+
+    void updateScenario();
     void updateEnemies();
     void sortEnemies();
     void cleanupEnemies();
@@ -93,19 +119,9 @@ class SceneGeneric : public QGraphicsScene,
     int livesCnt_;
     int wavesCnt_;
 
-    struct SpawType {
-        int deltaTime;
-        int offx;
-        int offy;
-        QString enemyClass;
-    };
-    struct EnemyGroupType {
-        int spawnCnt;
-        int spawnPeriod;
-        int spawnTotal;
-        SpawType unit[2];
-    };
-    EnemyGroupType spawnGroup_;
+    int scenarioPos_;
+    std::vector<SpawnEventType> scenario_;
+    std::list<SpawnEventType> activeGroups_;
 };
 
 DECLARE_CLASS(SceneGeneric)
