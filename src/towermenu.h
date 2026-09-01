@@ -20,6 +20,7 @@
 #include <QGraphicsObject>
 #include <QJsonObject>
 #include <QPainter>
+#include <QPixmap>
 #include "towermenubtn.h"
 
 class TowerMenu : public QGraphicsObject {
@@ -40,4 +41,6 @@ class TowerMenu : public QGraphicsObject {
  private:
     TowerMenuButton* upgradeBtn_;
     TowerMenuButton* sellBtn_;
+    QPixmap spriteDigits_;
+    QPixmap digits64_[10];
 };

@@ -21,9 +21,6 @@
 #include <QJsonArray>
 #include <QDebug>
 
-//const qreal HEX_HEIGHT = std::sqrt(3) * HEX_RADIUS_Y;
-//const qreal HORIZ_SPACING = 1.5 * HEX_RADIUS_X;
-
 const qreal HEX_WIDTH = std::sqrt(3) * HEX_RADIUS_X;
 const qreal VERT_SPACING = 1.5 * HEX_RADIUS_Y;
 
@@ -63,9 +60,9 @@ SceneGeneric::SceneGeneric(QObject *parent,
             continue;
         }
         QJsonArray Waves = l["Waves"].toArray();
-        SpawnEventType spawnEvent;
         for (auto waveList : Waves) {
             for (auto waveRef : waveList.toArray()) {
+                SpawnEventType spawnEvent;  // unit list must be cleared
                 addWave(waveRef.toObject(), &spawnEvent);
                 scenario_.push_back(spawnEvent);
             }
@@ -167,9 +164,9 @@ void SceneGeneric::addWave(QJsonObject wave, SpawnEventType *ev) {
         ev->respawnTotal = wave["Respawn"].toInt();
 
         QJsonArray Spawn = wave["Spawn"].toArray();
-        SpawnUnitType unit;
         for (auto unitRef : Spawn) {
             QJsonObject uobj = unitRef.toObject();
+            SpawnUnitType unit;
             unit.dt = uobj["dt"].toInt();
             unit.offx = uobj["offx"].toInt();
             unit.offy = uobj["offy"].toInt();
@@ -342,7 +339,7 @@ void SceneGeneric::updateEnemies() {
     auto it = activeGroups_.begin();
     while (it != activeGroups_.end()) {
         SpawnEventType &gr = *it;
-        for (auto &unit : gr.units){
+        for (auto &unit: gr.units) {
             if (unit.dt == gr.spawnCnt) {
                 QJsonObject ecfg;
                 ecfg["Route"] = unit.routeName;

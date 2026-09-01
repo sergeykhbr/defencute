@@ -40,6 +40,11 @@ TowerMenu::TowerMenu(QGraphicsObject *parent,
     connect(sellBtn_, &TowerMenuButton::signalPressed,
             this, &TowerMenu::slotBtnPressed);
 
+    spriteDigits_.load(":/images/digits_gold64.png");
+    for (int i = 0; i < 10; i++) {
+        digits64_[i] = spriteDigits_.copy(64*i, 0, 64, 64);
+    }
+
     int zdepth = cfg["MenuZDepth"].toInt();
     setZValue(zdepth);
     setVisible(false);
@@ -57,6 +62,8 @@ void TowerMenu::paint(QPainter *painter,
     painter->setPen(QPen(QColor(255, 255, 255, 60), 1, Qt::DashLine));
     painter->setBrush(QColor(0, 0, 0, 20)); // Soft dark circle backdrop
     painter->drawEllipse(QRectF(-45, -45, 90, 90));
+
+    painter->drawPixmap(-25, -25, digits64_[1]);
 
 #if 0
     // Debug draw boundRect:
