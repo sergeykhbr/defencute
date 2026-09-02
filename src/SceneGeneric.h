@@ -28,6 +28,7 @@
 #include "projectile.h"
 #include "hexmenu.h"
 #include "hextile.h"
+#include "actionbtn.h"
 #include "InfoPanel.h"
 #include <ICoreClass.h>
 #include <ICoreObject.h>
@@ -45,6 +46,7 @@ class SceneGeneric : public QGraphicsScene,
 
     // IScene
     virtual bool isGoldAvailable(int gold) override { return goldCnt_ >= gold; }
+    virtual int getUserActionTimeout(QString &type) override { return 0; }
     virtual void buildTower(QString &towerclass) override;
     virtual void addProjectile(Projectile *p) override;
     virtual QList<Waypoint> *getpRoute(QString name) override;
@@ -112,6 +114,7 @@ class SceneGeneric : public QGraphicsScene,
     int hexHNum_;       // total HEX per row
     int hexVNum_;       // total HEX per col
     QGraphicsObject *currentHoveredHex_;
+    ActionButton *actions_[3];
     QBrush oldBrush_;
     HexTile *hextileSelected_;
     InfoPanel *infoPanel_;

@@ -115,6 +115,13 @@ SceneGeneric::SceneGeneric(QObject *parent,
     hexmenu_ = new HexMenu(cfg_);
     addItem(hexmenu_);
 
+    actions_[0] = new ActionButton(nullptr, "BuildBarricade", cfg_);
+    actions_[1] = new ActionButton(nullptr, "BoostTower", cfg_);
+    actions_[2] = new ActionButton(nullptr, "Distract", cfg_);
+    addItem(actions_[0]);
+    addItem(actions_[1]);
+    addItem(actions_[2]);
+
     // Information panel: health, wave number:
     infoPanel_ = new InfoPanel(static_cast<IScene *>(this));
     infoPanel_->setPos(0, 0);
@@ -133,19 +140,6 @@ SceneGeneric::SceneGeneric(QObject *parent,
     emit signalUpdateLives(livesCnt_);
     emit signalUpdateWave(wavesCnt_);
 
-    // Spawing scenario:
-    /*spawnGroup_.respawnTotal = 10;
-    spawnGroup_.spawnPeriod = 60 * 10;
-    spawnGroup_.spawnCnt = 0;
-    spawnGroup_.unit[0].deltaTime = 2;
-    spawnGroup_.unit[0].enemyClass = "Enemy";
-    spawnGroup_.unit[0].offx = 10;
-    spawnGroup_.unit[0].offy = -5;
-
-    spawnGroup_.unit[1].deltaTime = 120;
-    spawnGroup_.unit[1].enemyClass = "Enemy";
-    spawnGroup_.unit[1].offx = -15;
-    spawnGroup_.unit[1].offy = 5;*/
 }
 
 void SceneGeneric::addWave(QJsonObject wave, SpawnEventType *ev) {

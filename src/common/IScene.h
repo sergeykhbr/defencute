@@ -28,11 +28,16 @@ struct Waypoint {
     QVector2D dist;
 };
 
+//static const int UserBuildBarricade = 0;
+//static const int UserBoostTower = 1;
+//static const int UserDistraction = 2;
+
 class IScene : public Interface {
  public:
     IScene() : Interface("IScene") {}
 
     virtual bool isGoldAvailable(int gold) = 0;
+    virtual int getUserActionTimeout(QString &type) = 0;
     virtual void buildTower(QString &towerclass) = 0;
     virtual void addProjectile(Projectile *p) = 0;
     virtual QList<Waypoint> *getpRoute(QString name) = 0;

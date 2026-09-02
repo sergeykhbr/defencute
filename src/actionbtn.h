@@ -16,24 +16,22 @@
 
 #pragma once
 
-#include <QObject>
-#include <QGraphicsObject>
 #include <QGraphicsSceneMouseEvent>
+#include <QGraphicsObject>
 #include <QPainter>
 #include <QCursor>
+#include <QObject>
 #include <QJsonObject>
+#include <QRect>
 #include <IScene.h>
-#include <ITower.h>
+#include <QPixmap>
 
-class HexMenuButton : public QGraphicsObject {
+class ActionButton : public QGraphicsObject {
     Q_OBJECT
  public:
-    HexMenuButton(QGraphicsObject* parent,
-                  QJsonObject &cfg,
-                  qreal radius);
-
-    // Common methods
-    void selectTower(QString towerName);
+    ActionButton(QGraphicsObject* parent,
+                 QString actionName,
+                 QJsonObject &cfg);
 
     // GraphicsObject mandatory:
     virtual QRectF boundingRect() const override;
@@ -43,18 +41,15 @@ class HexMenuButton : public QGraphicsObject {
                        QWidget*) override;
 
  signals:
-    void signalPressed(QString &towerName);
+    void signalPressed();
 
  protected:
     void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
-    void hoverEnterEvent(QGraphicsSceneHoverEvent* event) override;
-    void hoverLeaveEvent(QGraphicsSceneHoverEvent* event) override;
+
  private:
     QJsonObject &cfg_;
-    QString selectedTower_;
-    qreal radius_;
-    int price_;
-    bool isHovered_;
+    QString actionName_;
     QPixmap coverImage_;
+    QRect rect_;
     IScene *iscene_;
 };

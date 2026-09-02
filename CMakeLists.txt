@@ -30,6 +30,8 @@ set(qtgame_src
     ${src_top}/common/IScene.h
     ${src_top}/core.h
     ${src_top}/core.cpp
+    ${src_top}/digits.h
+    ${src_top}/digits.cpp
     ${src_top}/projectile.h
     ${src_top}/projectile.cpp
     ${src_top}/towermenubtn.h
@@ -48,6 +50,8 @@ set(qtgame_src
     ${src_top}/hextile.cpp
     ${src_top}/InfoPanel.h
     ${src_top}/InfoPanel.cpp
+    ${src_top}/actionbtn.h
+    ${src_top}/actionbtn.cpp
     ${src_top}/SceneGeneric.h
     ${src_top}/SceneGeneric.cpp
     ${src_top}/GameView.h
