@@ -33,7 +33,9 @@ SceneGeneric::SceneGeneric(QObject *parent,
     hextileSelected_(nullptr),
     goldCnt_(100),
     livesCnt_(20),
-    wavesCnt_(20)
+    wavesCnt_(20),
+    barricadeCnt_(0),
+    barricadeTimeout_(20*60)
 {
     registerInterface(static_cast<IScene *>(this));
     cfg_["scene"] = getObjName();
@@ -121,6 +123,13 @@ SceneGeneric::SceneGeneric(QObject *parent,
     addItem(actions_[0]);
     addItem(actions_[1]);
     addItem(actions_[2]);
+
+    connect(actions_[0], &ActionButton::signalPressed,
+            this, &SceneGeneric::slotBuildBarricadeRequest);
+    connect(actions_[1], &ActionButton::signalPressed,
+            this, &SceneGeneric::slotBoostTowerRequest);
+    connect(actions_[2], &ActionButton::signalPressed,
+            this, &SceneGeneric::slotDistractRequest);
 
     // Information panel: health, wave number:
     infoPanel_ = new InfoPanel(static_cast<IScene *>(this));
@@ -302,6 +311,26 @@ void SceneGeneric::addProjectile(Projectile *p) {
     addItem(p);
 }
 
+int SceneGeneric::getUserActionTimeout(QString &type) {
+    if (type == "BuildBarricade") {
+        double ret = 100.0*barricadeCnt_;
+        ret /= barricadeTimeout_;
+        return static_cast<int>(ret);
+    }
+    return 0;
+}
+
+void SceneGeneric::slotBuildBarricadeRequest() {
+    barricadeCnt_ = barricadeTimeout_;
+}
+
+void SceneGeneric::slotBoostTowerRequest() {
+}
+
+void SceneGeneric::slotDistractRequest() {
+}
+
+
 void SceneGeneric::updateScenario() {
     SpawnEventType *cur = &scenario_.at(scenarioPos_);
 
@@ -320,6 +349,11 @@ void SceneGeneric::updateScenario() {
         activeGroups_.push_back(*cur);
         scenarioPos_++;
         return;
+    }
+
+    if (barricadeCnt_) {
+        --barricadeCnt_;
+        actions_[0]->update();
     }
 }
 

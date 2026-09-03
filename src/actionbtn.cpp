@@ -64,11 +64,38 @@ void ActionButton::paint(QPainter* painter,
 
     painter->drawPixmap(rect_, coverImage_);
 
-    if (iscene_->getUserActionTimeout(actionName_)) {
-        painter->setBrush(QColor(255, 255, 255, 140));
+    int percentage = iscene_->getUserActionTimeout(actionName_);
+    if (percentage) {
+        painter->setBrush(QColor(150, 150, 150, 110));
         painter->setPen(Qt::NoPen);
-        painter->drawEllipse(boundingRect());
+        painter->drawRect(rect_);
+
+        QRectF t1 = rect_;
+        qreal passed = t1.height() * ((100-percentage) / 100.0);
+        t1.setBottom(t1.bottom() - passed);
+        painter->setBrush(QColor(150, 150, 150, 210));
+        painter->drawRect(t1);
     }
+#if 0
+    // Debug draw boundRect:
+    painter->save();
+    QPen debugPen(QColor(255, 0, 100, 220), 1.5, Qt::DashLine);
+    debugPen.setCosmetic(true); // THE SECRET: Prevents line scaling when zooming the view camera
+    painter->setPen(debugPen);
+    painter->setBrush(QColor(255, 0, 100, 20)); // Soft translucent red fill back drop highlight
+    painter->drawRect(boundingRect());
+    painter->restore();
+#endif
+#if 0
+    // Debug draw shape():
+    QPen shapePen(QColor(0, 200, 255, 255), 1.5, Qt::SolidLine);
+    shapePen.setCosmetic(true); 
+    painter->save();
+    painter->setPen(shapePen);
+    painter->setBrush(QColor(0, 200, 255, 30)); // Soft translucent blue fill
+    painter->drawPath(shape());
+    painter->restore();
+#endif
 }
 
 void ActionButton::mousePressEvent(QGraphicsSceneMouseEvent* event) {
@@ -78,4 +105,5 @@ void ActionButton::mousePressEvent(QGraphicsSceneMouseEvent* event) {
     }
     emit signalPressed();
     event->accept(); // Block event from dropping to map behind
+    update();
 }

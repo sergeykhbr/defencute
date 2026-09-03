@@ -46,7 +46,7 @@ class SceneGeneric : public QGraphicsScene,
 
     // IScene
     virtual bool isGoldAvailable(int gold) override { return goldCnt_ >= gold; }
-    virtual int getUserActionTimeout(QString &type) override { return 0; }
+    virtual int getUserActionTimeout(QString &type) override;
     virtual void buildTower(QString &towerclass) override;
     virtual void addProjectile(Projectile *p) override;
     virtual QList<Waypoint> *getpRoute(QString name) override;
@@ -64,6 +64,11 @@ class SceneGeneric : public QGraphicsScene,
     void signalUpdateGold(int gold);
     void signalUpdateLives(int lives);
     void signalUpdateWave(int wave);
+
+ protected slots:
+    void slotBuildBarricadeRequest();
+    void slotBoostTowerRequest();
+    void slotDistractRequest();
 
  private:
     enum ESpawnType {
@@ -121,6 +126,8 @@ class SceneGeneric : public QGraphicsScene,
     int goldCnt_;
     int livesCnt_;
     int wavesCnt_;
+    int barricadeCnt_;
+    int barricadeTimeout_;
 
     int scenarioPos_;
     std::vector<SpawnEventType> scenario_;
